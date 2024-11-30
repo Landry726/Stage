@@ -100,10 +100,17 @@ const SortieList = () => {
   );
 
   return (
-    <Box  sx={{ padding: '-10px', marginTop: '5px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-230px' }}>
-      <Typography  variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
+    <Paper elevation={3}
+    sx={{
+      padding: "10px",
+      marginLeft:  '-220px',
+      maxHeight: '100vh',
+      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+      overflowY: 'auto'
+    }}>
+      {/* <Typography  variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
         Liste des Sorties
-      </Typography>
+      </Typography> */}
       <Link to="/AjoutSortie">
         <Button variant="contained" color="primary" startIcon={<AddIcon />} sx={{ mb: 2 }}>
           Ajouter une entrée
@@ -240,7 +247,7 @@ const SortieList = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Paper>
   );
 };
 

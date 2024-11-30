@@ -20,4 +20,7 @@ router.delete('/:id', caisseController.deleteCaisse);
 // Route pour récupérer le total des caisses
 router.get('/total', caisseController.getTotalCaisses);
 
+router.get('/trends', caisseController.getTrends);
+
+
 module.exports = router;

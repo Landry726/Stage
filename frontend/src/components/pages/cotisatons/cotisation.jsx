@@ -31,7 +31,7 @@ const CotisationTable = () => {
     const [cotisations, setCotisations] = useState([]);
     const [membres, setMembres] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [cotisationsPerPage] = useState(5);
+    const [cotisationsPerPage] = useState(4);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [cotisationToEdit, setCotisationToEdit] = useState(null);
@@ -39,6 +39,7 @@ const CotisationTable = () => {
     const [alertSeverity, setAlertSeverity] = useState('success');
     const [showAlert, setShowAlert] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState('');
 
     useEffect(() => {
         fetchCotisations();
@@ -86,6 +87,33 @@ const CotisationTable = () => {
         }
     };
 
+    const handleUpdate = async () => {
+        if (!cotisationToEdit) return;
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/cotisations/${cotisationToEdit.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    membreId: cotisationToEdit.membreId,
+                    montant: cotisationToEdit.montant,
+                    mois: cotisationToEdit.mois,
+                    datePaiement: cotisationToEdit.datePaiement || new Date().toISOString().split('T')[0],
+                }),
+            });
+
+            if (response.ok) {
+                toast.success('Cotisation mise à jour avec succès.');
+                fetchCotisations(); // Rafraîchir la liste des cotisations
+                setEditDialogOpen(false); // Fermer la modal
+            } else {
+                throw new Error('Erreur lors de la mise à jour de la cotisation.');
+            }
+        } catch (error) {
+            toast.error(error.message);
+        }
+    };
+
     const handleEditDialogOpen = (cotisation) => {
         setCotisationToEdit(cotisation);
         setEditDialogOpen(true);
@@ -99,41 +127,66 @@ const CotisationTable = () => {
         setSearchTerm(event.target.value);
     };
 
-    const filteredCotisations = cotisations.filter((cotisation) =>
-        membres.find((membre) => membre.id === cotisation.membreId)?.nom.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleMonthChange = (event) => {
+        setSelectedMonth(event.target.value); // Gérer le changement de mois
+    };
+
+    // Filtrage des cotisations : recherche et mois
+    const filteredCotisations = cotisations.filter((cotisation) => {
+        const isMatchingMembre = membres.find((membre) => membre.id === cotisation.membreId)?.nom.toLowerCase().includes(searchTerm.toLowerCase());
+        const isMatchingMonth = selectedMonth ? cotisation.mois === selectedMonth || selectedMonth === 'Tous' : true; // Filtrer par mois ou "Tous"
+        return isMatchingMembre && isMatchingMonth;
+    });
 
     return (
-        <Paper sx={{ padding: '12px', marginTop: '10px', maxHeight: '100vh', overflowY: 'auto', marginLeft: '-220px' }}>
-            <Typography  variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
-                Cotisation
-            </Typography>
+        <Paper sx={{ padding: '15px', marginTop: '10px', maxHeight: '100vh', overflowY: 'auto', marginLeft: '-220px' }}>
             <Link to="/ajoutCotisation">
                 <Button variant="contained" color="primary" sx={{ marginBottom: '16px' }} startIcon={<AddIcon />}>
                     Ajouter un Paiement
                 </Button>
             </Link>
 
-            <TextField
-                label="Rechercher par membre"
-                variant="outlined"
-                fullWidth
-                value={searchTerm}
-                onChange={handleSearchChange}
-                sx={{ marginBottom: '16px' }}
-            />
+            {/* Diviser la recherche en deux colonnes */}
+            <Grid container spacing={2} sx={{ marginBottom: '16px' }}>
+                <Grid item xs={12} sm={6}>
+                    <TextField
+                        label="Rechercher par membre"
+                        variant="outlined"
+                        fullWidth
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    {/* Filtre par mois */}
+                    <TextField
+                        label="Filtrer par mois"
+                        select
+                        fullWidth
+                        value={selectedMonth}
+                        onChange={handleMonthChange}
+                    >
+                        <MenuItem value="Tous">Tous</MenuItem> {/* Option Tous */}
+                        {['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'].map((mois) => (
+                            <MenuItem key={mois} value={mois}>
+                                {mois}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </Grid>
+            </Grid>
 
             <TableContainer sx={{ maxHeight: 500, overflowY: 'auto', overflowX: 'auto' }}>
                 <Table sx={{ minWidth: 850 }}>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>ID</TableCell>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Membre</TableCell>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Date de Paiement</TableCell>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Montant</TableCell>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Mois</TableCell>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Status</TableCell>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Actions</TableCell>
+                            <TableCell sx={{ color: 'white', backgroundColor: '#003399' }}>ID</TableCell>
+                            <TableCell sx={{ color: 'white', backgroundColor: '#003399' }}>Membre</TableCell>
+                            <TableCell sx={{ color: 'white', backgroundColor: '#003399' }}>Date de Paiement</TableCell>
+                            <TableCell sx={{ color: 'white', backgroundColor: '#003399' }}>Montant</TableCell>
+                            <TableCell sx={{ color: 'white', backgroundColor: '#003399' }}>Mois</TableCell>
+                            <TableCell sx={{ color: 'white', backgroundColor: '#003399' }}>Status</TableCell>
+                            <TableCell sx={{ color: 'white', backgroundColor: '#003399' }}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -160,7 +213,7 @@ const CotisationTable = () => {
             </TableContainer>
 
             <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
+                rowsPerPageOptions={[4, 10, 25]}
                 component="div"
                 count={filteredCotisations.length}
                 rowsPerPage={cotisationsPerPage}
@@ -168,78 +221,84 @@ const CotisationTable = () => {
                 onPageChange={handleChangePage}
             />
 
-            {/* Modal de confirmation de suppression */}
+            {/* Dialog de suppression */}
             <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
                 <DialogTitle>Confirmer la suppression</DialogTitle>
                 <DialogContent>
-                    <p>Êtes-vous sûr de vouloir supprimer cette cotisation ?</p>
+                    <Typography>Voulez-vous vraiment supprimer cette cotisation ?</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
-                        Annuler
-                    </Button>
-                    <Button onClick={() => handleDelete(cotisationToEdit?.id)} color="error" variant="contained">
+                    <Button onClick={() => setDeleteDialogOpen(false)}>Annuler</Button>
+                    <Button onClick={() => handleDelete(cotisationToEdit.id)} color="error">
                         Supprimer
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Modal de mise à jour */}
+            {/* Dialog de modification */}
             <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
-                <DialogTitle>Modifier la cotisation</DialogTitle>
+                <DialogTitle>Modifier la Cotisation</DialogTitle>
                 <DialogContent>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Membre"
-                                select
-                                fullWidth
-                                value={cotisationToEdit?.membreId || ''}
-                                onChange={(e) => setCotisationToEdit({ ...cotisationToEdit, membreId: e.target.value })}
-                                autoFocus
-                            >
-                                {membres.map((membre) => (
-                                    <MenuItem key={membre.id} value={membre.id}>
-                                        {membre.nom}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Montant"
-                                fullWidth
-                                type="number"
-                                value={cotisationToEdit?.montant || ''}
-                                onChange={(e) => setCotisationToEdit({ ...cotisationToEdit, montant: e.target.value })}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                label="Mois"
-                                fullWidth
-                                value={cotisationToEdit?.mois || ''}
-                                onChange={(e) => setCotisationToEdit({ ...cotisationToEdit, mois: e.target.value })}
-                            />
-                        </Grid>
-                    </Grid>
+                    <TextField
+                        label="Membre"
+                        select
+                        fullWidth
+                        value={cotisationToEdit?.membreId || ''}
+                        onChange={(e) =>
+                            setCotisationToEdit((prev) => ({ ...prev, membreId: e.target.value }))
+                        }
+                    >
+                        {membres.map((membre) => (
+                            <MenuItem key={membre.id} value={membre.id}>
+                                {membre.nom}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    <TextField
+                        label="Montant"
+                        type="number"
+                        fullWidth
+                        value={cotisationToEdit?.montant || ''}
+                        onChange={(e) =>
+                            setCotisationToEdit((prev) => ({ ...prev, montant: e.target.value }))
+                        }
+                    />
+                    <TextField
+                        label="Mois"
+                        select
+                        fullWidth
+                        value={cotisationToEdit?.mois || ''}
+                        onChange={(e) =>
+                            setCotisationToEdit((prev) => ({ ...prev, mois: e.target.value }))
+                        }
+                    >
+                        {['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'].map((mois) => (
+                            <MenuItem key={mois} value={mois}>
+                                {mois}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    <TextField
+                        label="Date de Paiement"
+                        type="date"
+                        fullWidth
+                        value={cotisationToEdit?.datePaiement || ''}
+                        onChange={(e) =>
+                            setCotisationToEdit((prev) => ({ ...prev, datePaiement: e.target.value }))
+                        }
+                    />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setEditDialogOpen(false)} color="primary">
-                        Annuler
-                    </Button>
-                    <Button onClick={() => fetchCotisations()} color="primary" variant="contained">
+                    <Button onClick={() => setEditDialogOpen(false)}>Annuler</Button>
+                    <Button onClick={handleUpdate} color="primary">
                         Mettre à jour
                     </Button>
                 </DialogActions>
             </Dialog>
 
+            {/* Alert */}
             {showAlert && (
-                <Alert
-                    severity={alertSeverity}
-                    onClose={() => setShowAlert(false)}
-                    sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1 }}
-                >
+                <Alert severity={alertSeverity} onClose={() => setShowAlert(false)}>
                     {alertMessage}
                 </Alert>
             )}

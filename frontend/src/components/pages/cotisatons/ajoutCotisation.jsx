@@ -7,11 +7,12 @@ import {
     Container,
     Grid,
     InputAdornment,
+    Paper,
 } from '@mui/material';
 import { AccountCircle, MonetizationOn, CalendarToday } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom'; // Importer useNavigate pour la redirection
-import { ToastContainer, toast } from 'react-toastify'; // Importer ToastContainer et toast
-import 'react-toastify/dist/ReactToastify.css'; // Importer le style de Toastify
+import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function CotisationForm() {
     const [membreId, setMembreId] = useState('');
@@ -20,10 +21,8 @@ function CotisationForm() {
     const [datePaiement, setDatePaiement] = useState('');
     const [status, setStatus] = useState('');
     const [membres, setMembres] = useState([]);
-    const [message, setMessage] = useState('');
-    const [severity, setSeverity] = useState('');
     const [errors, setErrors] = useState({});
-    const navigate = useNavigate(); // Initialiser useNavigate pour la redirection
+    const navigate = useNavigate();
 
     // Récupérer la liste des membres
     useEffect(() => {
@@ -46,13 +45,12 @@ function CotisationForm() {
         if (!mois) newErrors.mois = 'Mois est requis';
         if (!datePaiement) newErrors.datePaiement = 'Date de paiement est requise';
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0; // Retourne true si pas d'erreur
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!validateForm()) return; // Si le formulaire est invalide, ne pas envoyer
+        if (!validateForm()) return;
 
         const data = {
             membreId: parseInt(membreId),
@@ -74,125 +72,206 @@ function CotisationForm() {
             if (!response.ok) throw new Error('Erreur lors de l’ajout de la cotisation');
 
             toast.success('Cotisation ajoutée avec succès !');
-            
-            // Réinitialiser les champs
             setMembreId('');
             setMontant('');
             setMois('');
             setDatePaiement('');
             setStatus('');
 
-            // Rediriger vers la liste des cotisations après une courte pause pour afficher le message
             setTimeout(() => {
-                navigate('/cotisation'); // Remplacez '/cotisations' par le chemin de votre page de liste
+                navigate('/cotisation');
             }, 2000);
         } catch (error) {
             toast.error(error.message);
         }
     };
 
+    const handleCancel = () => {
+        navigate('/cotisation'); // Retourner à la liste des cotisations
+    };
+
     return (
-        <Container maxWidth="sm" sx={{ backgroundColor: 'white', borderRadius: 2 , marginLeft : '-220px' , maxHeight : '100vh' ,width : '100vh'}}>
-            <Typography variant="h4" gutterBottom align="left">
-                Ajouter un paiement
-            </Typography>
-            <form onSubmit={handleSubmit}>
-                <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                        <TextField
-                            select
-                            label="Membre"
-                            value={membreId}
-                            onChange={(e) => setMembreId(e.target.value)}
-                            fullWidth
-                            required
-                            error={!!errors.membreId}
-                            helperText={errors.membreId}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <AccountCircle />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        >
-                            <MenuItem value="">
-                                <em>Sélectionnez un membre</em>
-                            </MenuItem>
-                            {membres.map((membre) => (
-                                <MenuItem key={membre.id} value={membre.id}>
-                                    {membre.nom}
+        <Container maxWidth="lg" sx={{ paddingTop: 4  }}>
+            <Paper
+                elevation={3}
+                sx={{
+                    padding: 4,
+                    borderRadius: 3,
+                    boxShadow: 3,
+                    mr : 5,
+                    marginLeft : -15,
+                }}
+            >
+                <Typography variant="h5" gutterBottom align="center" sx={{ marginBottom: 3 }}>
+                    Ajouter un paiement
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <TextField
+                                select
+                                label="Membre"
+                                value={membreId}
+                                onChange={(e) => setMembreId(e.target.value)}
+                                fullWidth
+                                required
+                                error={!!errors.membreId}
+                                helperText={errors.membreId}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <AccountCircle />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 2,
+                                    '& .MuiInputBase-root': {
+                                        fontSize: '1rem',
+                                        padding: '8px 14px',
+                                    },
+                                }}
+                            >
+                                <MenuItem value="">
+                                    <em>Sélectionnez un membre</em>
                                 </MenuItem>
-                            ))}
-                        </TextField>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            label="Montant"
-                            type="number"
-                            value={montant}
-                            onChange={(e) => setMontant(e.target.value)}
-                            fullWidth
-                            required
-                            error={!!errors.montant}
-                            helperText={errors.montant}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <MonetizationOn />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            select
-                            label="Mois"
-                            value={mois}
-                            onChange={(e) => setMois(e.target.value)}
-                            fullWidth
-                            required
-                            error={!!errors.mois}
-                            helperText={errors.mois}
-                        >
-                            <MenuItem value="">
-                                <em>Sélectionnez un mois</em>
-                            </MenuItem>
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <MenuItem key={i + 1} value={`${i + 1}`}>
-                                    {new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(new Date(0, i))}
+                                {membres.map((membre) => (
+                                    <MenuItem key={membre.id} value={membre.id}>
+                                        {membre.nom}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Montant"
+                                type="number"
+                                value={montant}
+                                onChange={(e) => setMontant(e.target.value)}
+                                fullWidth
+                                required
+                                error={!!errors.montant}
+                                helperText={errors.montant}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <MonetizationOn />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 2,
+                                    '& .MuiInputBase-root': {
+                                        fontSize: '1rem',
+                                        padding: '8px 14px',
+                                    },
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                select
+                                label="Mois"
+                                value={mois}
+                                onChange={(e) => setMois(e.target.value)}
+                                fullWidth
+                                required
+                                error={!!errors.mois}
+                                helperText={errors.mois}
+                                sx={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 2,
+                                    '& .MuiInputBase-root': {
+                                        fontSize: '1rem',
+                                        padding: '8px 14px',
+                                    },
+                                }}
+                            >
+                                <MenuItem value="">
+                                    <em>Sélectionnez un mois</em>
                                 </MenuItem>
-                            ))}
-                        </TextField>
+                                {Array.from({ length: 12 }, (_, i) => (
+                                    <MenuItem key={i + 1} value={`${i + 1}`}>
+                                        {new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(new Date(0, i))}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                label="Date de Paiement"
+                                type="date"
+                                value={datePaiement}
+                                onChange={(e) => setDatePaiement(e.target.value)}
+                                fullWidth
+                                required
+                                error={!!errors.datePaiement}
+                                helperText={errors.datePaiement}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <CalendarToday />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 2,
+                                    '& .MuiInputBase-root': {
+                                        fontSize: '1rem',
+                                        padding: '8px 14px',
+                                    },
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Button
+                                variant="outlined"
+                                onClick={handleCancel}
+                                fullWidth
+                                sx={{
+                                    padding: '12px',
+                                    backgroundColor: '#ff4d4d',
+                                    color: 'white',
+                                    borderRadius: '8px',
+                                    fontSize: '1rem',
+                                    border: '1px solid #cc0000',
+                                    '&:hover': {
+                                        backgroundColor: '#cc0000',
+                                    },
+                                }}
+                            >
+                                Annuler
+                            </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                type="submit"
+                                fullWidth
+                                sx={{
+                                    padding: '12px',
+                                    background: 'linear-gradient(to right, #007bff, #0056b3)',
+                                    color: 'white',
+                                    borderRadius: '8px',
+                                    fontSize: '1rem',
+                                    border: '1px solid #0056b3',
+                                    '&:hover': {
+                                        background: 'linear-gradient(to right, #0056b3, #004494)',
+                                    },
+                                }}
+                            >
+                                Ajouter
+                            </Button>
+                        </Grid>
+                       
                     </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            label="Date de Paiement"
-                            type="date"
-                            value={datePaiement}
-                            onChange={(e) => setDatePaiement(e.target.value)}
-                            fullWidth
-                            required
-                            error={!!errors.datePaiement}
-                            helperText={errors.datePaiement}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <CalendarToday />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Button variant="contained" color="primary" type="submit" fullWidth>
-                            Ajouter
-                        </Button>
-                    </Grid>
-                </Grid>
-            </form>
-            <ToastContainer /> {/* Assurez-vous d'ajouter ToastContainer ici */}
+                </form>
+                <ToastContainer />
+            </Paper>
         </Container>
     );
 }

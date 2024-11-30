@@ -97,7 +97,7 @@ function PaginatedPaymentList() {
   );
 
   return (
-    <Box sx={{ padding: '-10px', marginTop: '5px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-230px' }}>
+    <Paper sx={{ padding: '15px', marginTop: '5px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-240px' }}>
       <TextField
         label="Rechercher un paiement"
         variant="outlined"
@@ -127,20 +127,20 @@ function PaginatedPaymentList() {
           <Table sx={{ minWidth:950 }}>
             <TableHead>
               <TableRow>
-                <TableCell>Membre</TableCell>
-                <TableCell>ID de la Mission</TableCell>
-                <TableCell>Mois</TableCell>
-                <TableCell>Montant Payer</TableCell>
-                <TableCell>Date du Paiement</TableCell>
-                <TableCell>Reste à Payer</TableCell>
-                <TableCell>Action</TableCell>
+                <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }} >Membre</TableCell>
+                <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Montant Mission</TableCell>
+                <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Mois</TableCell>
+                <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Montant Payer</TableCell>
+                <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Date du Paiement</TableCell>
+                <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Reste à Payer</TableCell>
+                <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredPaiements.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((paiement) => (
                 <TableRow key={paiement.id}>
                   <TableCell>{paiement.membre.nom}</TableCell>
-                  <TableCell>{paiement.mission.id}</TableCell>
+                  <TableCell>{paiement.mission.montant} Ar</TableCell>
                   <TableCell>{paiement.mission.mois}</TableCell>
                   <TableCell>{paiement.montant}Ar</TableCell>
                   <TableCell>{new Date(paiement.datePaiement).toLocaleDateString()}</TableCell>
@@ -212,7 +212,7 @@ function PaginatedPaymentList() {
           <Button onClick={handleDeleteSubmit} color="error">Supprimer</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Paper>
   );
 }
 

@@ -18,9 +18,8 @@ import {
   Snackbar,
   IconButton,
   Typography,
-  TablePagination,  // Importer TablePagination pour la pagination
-  DialogTitle as DialogTitleMui,
-  DialogContent as DialogContentMui
+  TablePagination,
+  MenuItem,  // Import MenuItem pour chaque mois
 } from '@mui/material';
 import { Add as AddIcon, List as ListIcon } from '@mui/icons-material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
@@ -29,22 +28,25 @@ import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 
 const MissionList = () => {
   const [missions, setMissions] = useState([]);
+  const [filteredMissions, setFilteredMissions] = useState([]); // Liste filtrée des missions
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [editMission, setEditMission] = useState(null);
   const [missionToDelete, setMissionToDelete] = useState(null);  
   const [alert, setAlert] = useState({ open: false, message: '', severity: '' });
   
-  // État pour la pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Par défaut 5 missions par page
 
-  // Récupérer la liste des missions depuis l'API
+  // Ajout d'un état pour le mois sélectionné
+  const [selectedMonth, setSelectedMonth] = useState('');
+
   useEffect(() => {
     const fetchMissions = async () => {
       try {
         const response = await axios.get('http://localhost:3000/api/missions');
         setMissions(response.data);
+        setFilteredMissions(response.data); // Initialiser filteredMissions
       } catch (error) {
         console.error("Erreur de récupération des missions : ", error);
       }
@@ -53,12 +55,27 @@ const MissionList = () => {
     fetchMissions();
   }, []);
 
-  // Gérer la mise à jour d'une mission
+  // Fonction pour gérer le filtrage des missions par mois
+  const handleMonthChange = (event) => {
+    const selectedMonth = event.target.value;
+    setSelectedMonth(selectedMonth);
+    
+    if (selectedMonth === 'Tous') {
+      // Si l'option "Tous" est sélectionnée, afficher toutes les missions
+      setFilteredMissions(missions);
+    } else {
+      // Filtrer les missions par mois sélectionné
+      const filtered = missions.filter(mission => mission.mois === selectedMonth);
+      setFilteredMissions(filtered);
+    }
+  };
+
   const handleUpdate = async () => {
     try {
       const { id, membreId, montant, mois } = editMission;
       const response = await axios.put(`http://localhost:3000/api/missions/${id}`, { membreId, montant, mois });
       setMissions(missions.map(mission => (mission.id === id ? response.data : mission)));
+      setFilteredMissions(filteredMissions.map(mission => (mission.id === id ? response.data : mission)));
       toast.success('Mission mise à jour avec succès');
       setOpenDialog(false);
     } catch (error) {
@@ -66,11 +83,11 @@ const MissionList = () => {
     }
   };
 
-  // Gérer la suppression d'une mission
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:3000/api/missions/${missionToDelete.id}`);
       setMissions(missions.filter(mission => mission.id !== missionToDelete.id));
+      setFilteredMissions(filteredMissions.filter(mission => mission.id !== missionToDelete.id));
       toast.success('Mission supprimée avec succès');
       setOpenDeleteDialog(false);
     } catch (error) {
@@ -78,67 +95,69 @@ const MissionList = () => {
     }
   };
 
-  // Ouvrir la boîte de dialogue pour éditer une mission
   const handleOpenDialog = (mission) => {
     setEditMission(mission);
     setOpenDialog(true);
   };
 
-  // Ouvrir la boîte de dialogue pour confirmer la suppression
   const handleOpenDeleteDialog = (mission) => {
     setMissionToDelete(mission);
     setOpenDeleteDialog(true);
   };
 
-  // Fermer la boîte de dialogue d'édition
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditMission(null);
   };
 
-  // Fermer la boîte de dialogue de suppression
   const handleCloseDeleteDialog = () => {
     setOpenDeleteDialog(false);
     setMissionToDelete(null);
   };
 
-  // Gérer les changements de page
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  // Gérer les changements du nombre de lignes par page
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Revenir à la première page après le changement du nombre de lignes
+    setPage(0); 
   };
 
+  // Liste des mois
+  const months = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+
   return (
-    <Box  sx={{ padding: '-10px', marginTop: '-20px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-230px' }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
-      Mission
-      </Typography>
+    <Paper elevation={3} sx={{ padding: "15px", marginLeft: '-220px', maxHeight: '100vh', overflowY: 'auto' }}>
       <Link to="/ajoutMission">
-        <Button
-          variant="contained"
-          color="primary"
-          style={{ marginRight: 30 , marginBottom : 20 }}
-          startIcon={<AddIcon />}  // Ajouter une icône d'ajout
-        >
+        <Button variant="contained" color="primary" style={{ marginRight: 30 , marginBottom : 20 }} startIcon={<AddIcon />}>
           Ajouter une Mission
         </Button>
       </Link>
-      
       <Link to="/listePaimentMission">
-        <Button
-          variant="contained"
-          color="primary"
-          style={{ marginRight: 30 , marginBottom : 20 }}
-          startIcon={<ListIcon />}  // Ajouter une icône de liste
-        >
+        <Button variant="contained" color="primary" style={{ marginRight: 30 , marginBottom : 20 }} startIcon={<ListIcon />}>
           Liste des paiements
         </Button>
       </Link>
+
+      {/* Champ pour sélectionner le mois */}
+      <TextField
+        label="Filtrer par mois"
+        select
+        fullWidth
+        value={selectedMonth}
+        onChange={handleMonthChange}
+        sx={{ marginBottom: '16px' }}
+      >
+        <MenuItem value="Tous">Tous</MenuItem> {/* Option "Tous" */}
+        {months.map((mois) => (
+          <MenuItem key={mois} value={mois}>
+            {mois.charAt(0).toUpperCase() + mois.slice(1)} {/* Mise en majuscule du premier caractère */}
+          </MenuItem>
+        ))}
+      </TextField>
 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 800 }}>
@@ -152,24 +171,17 @@ const MissionList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {missions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((mission) => (
+            {filteredMissions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((mission) => (
               <TableRow key={mission.id}>
                 <TableCell>{mission.id}</TableCell>
                 <TableCell>{mission.membre?.nom || 'Inconue'}</TableCell>
                 <TableCell>{mission.montant}</TableCell>
                 <TableCell>{mission.mois}</TableCell>
                 <TableCell>
-                  <IconButton 
-                    color="primary" sx={{ color: 'orange' }}
-                    onClick={() => handleOpenDialog(mission)} 
-                    style={{ marginRight: 10 }}
-                  >
+                  <IconButton sx={{ color: 'orange' }} onClick={() => handleOpenDialog(mission)} style={{ marginRight: 10 }}>
                     <EditIcon />
                   </IconButton>
-                  <IconButton 
-                    color="error" 
-                    onClick={() => handleOpenDeleteDialog(mission)}
-                  >
+                  <IconButton color="error" onClick={() => handleOpenDeleteDialog(mission)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -179,36 +191,40 @@ const MissionList = () => {
         </Table>
       </TableContainer>
 
-      {/* Pagination */}
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={missions.length}
+        count={filteredMissions.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
 
-      {/* Dialog pour l'édition */}
+      {/* Dialog pour modifier une mission */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Modifier la Mission</DialogTitle>
         <DialogContent>
           {editMission && (
             <>
               <TextField
-                label="Montant"
-                type="number"
+                label="Membre"
                 fullWidth
-                value={editMission.montant || ''}
+                value={editMission.membreId}
+                onChange={(e) => setEditMission({ ...editMission, membreId: e.target.value })}
+                margin="normal"
+              />
+              <TextField
+                label="Montant"
+                fullWidth
+                value={editMission.montant}
                 onChange={(e) => setEditMission({ ...editMission, montant: e.target.value })}
                 margin="normal"
               />
               <TextField
                 label="Mois"
-                type="month"
                 fullWidth
-                value={editMission.mois || ''}
+                value={editMission.mois}
                 onChange={(e) => setEditMission({ ...editMission, mois: e.target.value })}
                 margin="normal"
               />
@@ -216,32 +232,40 @@ const MissionList = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">Annuler</Button>
-          <Button onClick={handleUpdate} color="primary">Mettre à jour</Button>
+          <Button onClick={handleCloseDialog} color="primary">
+            Annuler
+          </Button>
+          <Button onClick={handleUpdate} color="primary">
+            Sauvegarder
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dialog de confirmation de suppression */}
+      {/* Dialog pour la suppression */}
       <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitleMui>Confirmer la suppression</DialogTitleMui>
-        <DialogContentMui>
-          <p>Êtes-vous sûr de vouloir supprimer cette mission ?</p>
-        </DialogContentMui>
+        <DialogTitle>Supprimer la Mission</DialogTitle>
+        <DialogContent>
+          <Typography>Êtes-vous sûr de vouloir supprimer cette mission ?</Typography>
+        </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="primary">Annuler</Button>
-          <Button onClick={handleDelete} color="secondary">Supprimer</Button>
+          <Button onClick={handleCloseDeleteDialog} color="primary">
+            Annuler
+          </Button>
+          <Button onClick={handleDelete} color="primary">
+            Supprimer
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar pour les alertes */}
+      {/* Toast Notification */}
       <Snackbar
         open={alert.open}
-        autoHideDuration={3000}
+        autoHideDuration={6000}
         onClose={() => setAlert({ ...alert, open: false })}
         message={alert.message}
         severity={alert.severity}
       />
-    </Box>
+    </Paper>
   );
 };
 

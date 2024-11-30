@@ -18,6 +18,9 @@ import {
     DialogTitle,
     TextField,
     Typography,
+    Box,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import { Link } from "react-router-dom";
 import EditIcon from '@mui/icons-material/Edit';
@@ -34,20 +37,22 @@ const MembersTable = () => {
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(5);  // Fixer à 4 lignes par page
     const [open, setOpen] = useState(false);
     const [currentMember, setCurrentMember] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [memberToDelete, setMemberToDelete] = useState(null);
 
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMediumScreen = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
     useEffect(() => {
         fetchMembers();
     }, []);
 
     useEffect(() => {
-        // Filtrer les membres en fonction de la requête de recherche
         if (searchQuery) {
             setFilteredMembers(
                 members.filter((member) =>
@@ -95,7 +100,7 @@ const MembersTable = () => {
             });
             toast.success('Membre mis à jour avec succès.');
             handleClose();
-            fetchMembers(); // Recharger la liste des membres
+            fetchMembers();
         } catch (error) {
             console.error('Erreur lors de la mise à jour:', error);
             toast.error('Erreur lors de la mise à jour.');
@@ -109,7 +114,7 @@ const MembersTable = () => {
             });
             toast.success('Membre supprimé avec succès.');
             setConfirmDelete(false);
-            fetchMembers(); // Recharger la liste des membres
+            fetchMembers();
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
             toast.error('Erreur lors de la suppression.');
@@ -122,7 +127,7 @@ const MembersTable = () => {
 
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
+        setPage(0);  // Réinitialiser la page à 0 lorsqu'on change le nombre de lignes par page
     };
 
     const handleOpenDeleteConfirmation = (member) => {
@@ -140,73 +145,92 @@ const MembersTable = () => {
     };
 
     if (loading) {
-        return <CircularProgress />;
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (error) {
-        return <div>Erreur: {error}</div>;
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+                <Typography variant="h6" color="error">
+                    Erreur: {error}
+                </Typography>
+            </Box>
+        );
     }
 
+    const columns = [
+        { id: 'id', label: 'ID', show: !isSmallScreen },
+        { id: 'nom', label: 'Nom', show: true },
+        { id: 'poste', label: 'Poste', show: !isSmallScreen },
+        { id: 'email', label: 'Email', show: !isMediumScreen },
+        { id: 'actions', label: 'Actions', show: true }
+    ];
+
     return (
-        <Paper sx={{ padding: '-10px', marginTop: '5px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-230px' }}>
-            <Typography  variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
-                Membre
-            </Typography>
-           <Link to="/ajoutMembre">
-                <Button variant="contained" color="primary" sx={{ marginBottom: '10px' }} startIcon={<AddIcon />}>
-                    Ajouter membre
-                </Button>
-            </Link>
-
-
-            {/* Champ de recherche */}
-            <TextField
-                label="Rechercher par nom"
-                variant="outlined"
-                fullWidth
-                margin="normal"
-                value={searchQuery}
-                onChange={handleSearchChange}
+        <Paper elevation={3}
+        sx={{
+          padding: "10px",
+          marginLeft:  '-220px',
+          maxHeight: '100vh',
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+          overflowY: 'auto'
+        }}>
+         <Link to="/ajoutMembre" style={{ textDecoration: 'none' }}>
+                    <Button variant="contained" color="primary" startIcon={<AddIcon />} sx={{ mb: 2 }}>
+                        Ajouter membre
+                    </Button>
+                </Link>
+                <TextField
+                    label="Rechercher par nom"
+                    variant="outlined"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    value={searchQuery}
+                    onChange={handleSearchChange}
             />
-
-            <TableContainer sx={{ maxHeight: 440 }}>
-                <Table stickyHeader sx={{ minWidth: 650 }}>
-                    <TableHead >
+        
+            <TableContainer sx={{ maxHeight: "65vh", overflowY: "auto", overflowX: "hidden" }}>
+                <Table stickyHeader>
+                    <TableHead>
                         <TableRow>
-                            <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}>ID</TableCell>
-                            <TableCell sx={{color: 'white' , backgroundColor: '#003399' }}>Nom</TableCell>
-                            <TableCell sx={{color: 'white' , backgroundColor: '#003399' }}>Poste</TableCell>
-                            <TableCell sx={{ color: 'white' ,backgroundColor: '#003399' }}>Email</TableCell>
-                            <TableCell sx={{ color: 'white' ,backgroundColor: '#003399' }}>Actions</TableCell>
+                            {columns.map((column) => column.show && (
+                                <TableCell key={column.id} sx={{ backgroundColor: "#003399", color: "white", ...(column.id === 'actions' && { textAlign: 'center' }) }}>
+                                    {column.label}
+                                </TableCell>
+                            ))}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {filteredMembers
-                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((member) => (
-                                <TableRow key={member.id}>
-                                    <TableCell>{member.id}</TableCell>
-                                    <TableCell>{member.nom}</TableCell>
-                                    <TableCell>{member.poste}</TableCell>
-                                    <TableCell>{member.email}</TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            onClick={() => handleOpen(member)}
-                                            color="primary"
-                                            aria-label="modifier"
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            onClick={() => handleOpenDeleteConfirmation(member)}
-                                            color="secondary"
-                                            aria-label="supprimer"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                        {filteredMembers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((member) => (
+                            <TableRow key={member.id} hover>
+                                {columns.map((column) => {
+                                    if (!column.show) return null;
+
+                                    if (column.id === 'actions') {
+                                        return (
+                                            <TableCell key={column.id} align="center">
+                                                <IconButton onClick={() => handleOpen(member)} color="primary" size={isSmallScreen ? "small" : "medium"}>
+                                                    <EditIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                                                </IconButton>
+                                                <IconButton onClick={() => handleOpenDeleteConfirmation(member)} color="secondary" size={isSmallScreen ? "small" : "medium"}>
+                                                    <DeleteIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                                                </IconButton>
+                                            </TableCell>
+                                        );
+                                    }
+
+                                    return (
+                                        <TableCell key={column.id}>
+                                            {member[column.id]}
+                                        </TableCell>
+                                    );
+                                })}
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -221,64 +245,45 @@ const MembersTable = () => {
                 onRowsPerPageChange={handleChangeRowsPerPage}
             />
 
-            {/* Modal pour la mise à jour */}
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>Modifier Membre</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Veuillez mettre à jour les informations du membre.
+                        Modifiez les informations du membre
                     </DialogContentText>
                     <TextField
                         label="Nom"
-                        value={currentMember?.nom || ''}
-                        onChange={(e) => setCurrentMember({ ...currentMember, nom: e.target.value })}
                         fullWidth
-                        margin="normal"
+                        value={currentMember ? currentMember.nom : ''}
+                        onChange={(e) => setCurrentMember({ ...currentMember, nom: e.target.value })}
+                        sx={{ marginBottom: 2 }}
                     />
                     <TextField
                         label="Poste"
-                        value={currentMember?.poste || ''}
+                        fullWidth
+                        value={currentMember ? currentMember.poste : ''}
                         onChange={(e) => setCurrentMember({ ...currentMember, poste: e.target.value })}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Email"
-                        value={currentMember?.email || ''}
-                        onChange={(e) => setCurrentMember({ ...currentMember, email: e.target.value })}
-                        fullWidth
-                        margin="normal"
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose} color="primary">
-                        Annuler
-                    </Button>
-                    <Button onClick={handleUpdateMember} color="primary">
-                        Mettre à jour
-                    </Button>
+                    <Button onClick={handleClose} color="secondary">Annuler</Button>
+                    <Button onClick={handleUpdateMember} color="primary">Mettre à jour</Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Confirmation de suppression */}
             <Dialog open={confirmDelete} onClose={handleCloseDeleteConfirmation}>
-                <DialogTitle>Confirmer la Suppression</DialogTitle>
+                <DialogTitle>Confirmation de suppression</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Êtes-vous sûr de vouloir supprimer {memberToDelete?.nom} ?
+                        Êtes-vous sûr de vouloir supprimer ce membre ?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDeleteConfirmation} color="primary">
-                        Annuler
-                    </Button>
-                    <Button onClick={handleDeleteMember} color="secondary">
-                        Supprimer
-                    </Button>
+                    <Button onClick={handleCloseDeleteConfirmation} color="secondary">Annuler</Button>
+                    <Button onClick={handleDeleteMember} color="primary">Supprimer</Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Toastify pour les notifications */}
             <ToastContainer />
         </Paper>
     );

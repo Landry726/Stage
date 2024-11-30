@@ -115,18 +115,22 @@ const SimpleTable = () => {
   };
 
   return (
-    <Box
-    sx={{ padding: '-10px', marginTop: '5px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-230px' }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
-        Liste des Utilisateurs
-      </Typography>
+    <Paper
+      elevation={3}
+      sx={{
+        padding: "18px",
+        marginLeft: '-210px',
+        maxHeight: '100vh',
+        overflowY: 'auto',
+      }}
+    >
       <TableContainer component={Paper} sx={{ maxHeight: 800, overflowY: 'auto', overflowX: 'auto' }}>
         <Table aria-label="user data table">
           <TableHead sx={{ backgroundColor: '#003399' }}>
             <TableRow>
-              <TableCell  sx={{ color: 'white', fontWeight: 'bold' }} >Nom</TableCell>
-              <TableCell  sx={{ color: 'white', fontWeight: 'bold' }}>Email</TableCell>
-              <TableCell  sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nom</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Email</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -137,7 +141,7 @@ const SimpleTable = () => {
                   <TableCell>{row.username}</TableCell>
                   <TableCell>{row.email}</TableCell>
                   <TableCell align="center">
-                    <IconButton onClick={() => handleEdit(row.id)} color="primary">
+                    <IconButton onClick={() => handleEdit(row.id)} sx={{ color: 'orange' }}>
                       <EditIcon />
                     </IconButton>
                     <IconButton onClick={() => handleDelete(row.id)} color="error">
@@ -165,7 +169,7 @@ const SimpleTable = () => {
           sx={{
             backgroundColor: 'white',
             padding: 4,
-            width: 400,
+            width: { xs: '90%', sm: 400 },
             margin: 'auto',
             marginTop: '15%',
             borderRadius: 2,
@@ -215,7 +219,7 @@ const SimpleTable = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Paper>
   );
 };
 

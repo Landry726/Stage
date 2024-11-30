@@ -111,10 +111,17 @@ const SoldeEntreeList = () => {
   };
 
   return (
-    <Box  sx={{ padding: '-10px', marginTop: '5px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-230px' }}>
-      <Typography  variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
+    <Paper elevation={3}
+    sx={{
+      padding: "10px",
+      marginLeft:  '-220px',
+      maxHeight: '100vh',
+      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+      overflowY: 'auto'
+    }}>
+      {/* <Typography  variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
         Liste des Entrées
-      </Typography>
+      </Typography> */}
 
      {/* Lien de type bouton pour ajouter une entrée */}
      <Link to="/AjoutEntree">
@@ -228,7 +235,7 @@ const SoldeEntreeList = () => {
       </Dialog>
 
       <ToastContainer />
-    </Box>
+    </Paper>
   );
 };
 

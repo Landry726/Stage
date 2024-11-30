@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Grid, Typography, Box, InputAdornment, MenuItem, FormControl, Select, InputLabel } from '@mui/material';
+import {
+  TextField, Button, Grid, Typography, Box, InputAdornment, MenuItem, FormControl, Select, InputLabel, Card, CardContent,
+} from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faDollarSign, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faDollarSign, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';  // Import CSS pour le toast
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS pour le toast
 import { useNavigate } from 'react-router-dom';
 
 const MissionForm = () => {
-  const [membres, setMembres] = useState([]);  // État pour stocker les membres
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm();
+  const [membres, setMembres] = useState([]); // État pour stocker les membres
+  const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
 
   // Récupérer les membres depuis l'API
@@ -18,7 +20,7 @@ const MissionForm = () => {
     const fetchMembres = async () => {
       try {
         const response = await axios.get('http://localhost:3000/api/membres'); // Remplacez par votre URL d'API
-        setMembres(response.data);  // Stocke les membres dans l'état
+        setMembres(response.data); // Stocke les membres dans l'état
       } catch (error) {
         console.error('Erreur lors de la récupération des membres:', error);
       }
@@ -31,103 +33,154 @@ const MissionForm = () => {
     try {
       // Envoi des données au backend
       const response = await axios.post('http://localhost:3000/api/missions', data);
-      
+
       // Affichage du message de succès
       if (response.status === 200) {
         toast.success("Mission ajoutée avec succès !");
-        navigate('/mission')
+        navigate('/mission');
       }
     } catch (error) {
       // Affichage du message d'erreur
       toast.error("Erreur lors de l'ajout de la mission");
     }
-
-
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600, margin: 'auto', padding: 2 }}>
-      <Typography variant="h4" gutterBottom align="center">
-        Ajouter une Mission
-      </Typography>
-      <form onSubmit={handleSubmit(onSubmit)}>
+    <Box   maxWidth="md" sx={{
+      padding:5,
+      borderRadius: 3,
+      boxShadow: 3,
+      mr : 5,
+      marginLeft : -1,
+  }}>
+          <Typography variant="h4" gutterBottom align="center">
+            Ajouter une Mission
+          </Typography>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Grid container spacing={2}>
+              {/* Select pour Membre */}
+              <Grid item xs={12}>
+                <FormControl fullWidth error={!!errors.membreId}>
+                  <InputLabel id="membre-label">Membre</InputLabel>
+                  <Select
+                    labelId="membre-label"
+                    label="Membre"
+                    size="medium"  // Agrandit le champ de texte
+                    style={{
+                        marginBottom: '20px', 
 
-        <Grid container spacing={2}>
+                        borderRadius: '10px',  // Coins arrondis
+                    }} // Espacement sous le champ
+                    {...register('membreId', { required: 'Le Membre est requis' })}
+                    defaultValue=""
+                  >
+                    {membres.map((membre) => (
+                      <MenuItem key={membre.id} value={membre.id}>
+                        {membre.nom} {/* Affiche le nom du membre */}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.membreId && <p style={{ color: 'red' }}>{errors.membreId.message}</p>}
+                </FormControl>
+              </Grid>
 
-          {/* Select pour Membre */}
-          <Grid item xs={12}>
-            <FormControl fullWidth error={!!errors.membreId}>
-              <InputLabel id="membre-label">Membre</InputLabel>
-              <Select
-                labelId="membre-label"
-                label="Membre"
-                {...register('membreId', { required: 'Le Membre est requis' })}
-                defaultValue=""
-              >
-                {membres.map((membre) => (
-                  <MenuItem key={membre.id} value={membre.id}>
-                    {membre.nom} {/* Affiche le nom du membre */}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.membreId && <p>{errors.membreId.message}</p>}
-            </FormControl>
-          </Grid>
+              {/* Montant */}
+              <Grid item xs={12}>
+                <TextField
+                  label="Montant"
+                  variant="outlined"
+                  size="medium"  // Agrandit le champ de texte
+                  style={{
+                      marginBottom: '20px', 
 
-          {/* Montant */}
-          <Grid item xs={12}>
-            <TextField
-              label="Montant"
-              variant="outlined"
-              fullWidth
-              type="number"
-              {...register('montant', { required: 'Le montant est requis' })}
-              error={!!errors.montant}
-              helperText={errors.montant ? errors.montant.message : ''}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FontAwesomeIcon icon={faDollarSign} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
+                      borderRadius: '10px',  // Coins arrondis
+                  }} // Espacement sous le champ
+                  fullWidth
+                  type="number"
+                  {...register('montant', { required: 'Le montant est requis' })}
+                  error={!!errors.montant}
+                  helperText={errors.montant ? errors.montant.message : ''}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FontAwesomeIcon icon={faDollarSign} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
 
-          {/* Mois */}
-          <Grid item xs={12}>
-            <TextField
-              label="Mois"
-              variant="outlined"
-              fullWidth
-              type="month"
-              {...register('mois', { required: 'Le mois est requis' })}
-              error={!!errors.mois}
-              helperText={errors.mois ? errors.mois.message : ''}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FontAwesomeIcon icon={faCalendarAlt} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
+              {/* Mois */}
+              <Grid item xs={12}>
+                <TextField
+                  label="Mois"
+                  variant="outlined"
+                  size="medium"  // Agrandit le champ de texte
+                  style={{
+                      marginBottom: '20px', 
 
-          {/* Submit Button */}
-          <Grid item xs={12}>
-            <Button 
-              type="submit" 
-              variant="contained" 
-              color="primary" 
-              fullWidth
-            >
-              Ajouter Mission
-            </Button>
-          </Grid>
+                      borderRadius: '10px',  // Coins arrondis
+                  }} // Espacement sous le champ
+                  fullWidth
+                  type="month"
+                  {...register('mois', { required: 'Le mois est requis' })}
+                  error={!!errors.mois}
+                  helperText={errors.mois ? errors.mois.message : ''}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <FontAwesomeIcon icon={faCalendarAlt} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
 
-        </Grid>
-      </form>
+              {/* Boutons */}
+              <Grid item xs={6}>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  fullWidth
+                  onClick={() => navigate('/mission')}
+                  sx={{
+                    padding: '12px',
+                    backgroundColor: '#ff4d4d',
+                    color: 'white',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    border: '1px solid #cc0000',
+                    '&:hover': {
+                        backgroundColor: '#cc0000',
+                    },
+                }}  
+                >
+                  Annuler
+                </Button>
+              </Grid>
+              <Grid item xs={6}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  sx={{
+                    padding: '12px',
+                     background: 'linear-gradient(to right, #007bff, #0056b3)',
+                      color: 'white',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      border: '1px solid #0056b3',
+                      '&:hover': {
+                      background: 'linear-gradient(to right, #0056b3, #004494)',
+                      },
+                }}
+                >
+                  Ajouter 
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
     </Box>
   );
 };

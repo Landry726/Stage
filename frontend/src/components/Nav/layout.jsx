@@ -20,6 +20,7 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
+  Tooltip,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -34,7 +35,8 @@ import GroupIcon from '@mui/icons-material/Group';
 import userLogo from '../../assets/images/logoFID.png';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 
-const drawerWidth = 230;
+const drawerWidthOpen = 230; // Largeur du Drawer lorsqu'il est ouvert
+const drawerWidthClosed = 60; // Largeur du Drawer lorsqu'il est réduit
 
 const Layout = ({ children }) => {
   const [open, setOpen] = useState(true);
@@ -91,18 +93,6 @@ const Layout = ({ children }) => {
           </IconButton>
           <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, ml: 2 }}>
             <img src={userLogo} alt="User Logo" style={{ width: 150, marginRight: 50 }} />
-            <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={{
-                fontFamily: 'Arial, sans-serif',
-                color: 'black',
-                fontWeight: 'bold',
-              }}
-            >
-            
-            </Typography>
           </Box>
           <IconButton color="inherit" aria-label="profile" onClick={handleProfileMenuOpen}>
             <Avatar>
@@ -118,67 +108,72 @@ const Layout = ({ children }) => {
           </Menu>
         </Toolbar>
       </AppBar>
+
       <Drawer
         sx={{
-          width: drawerWidth,
+          width: open ? drawerWidthOpen : drawerWidthClosed,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: drawerWidth,
+            width: open ? drawerWidthOpen : drawerWidthClosed,
             boxSizing: 'border-box',
             backgroundColor: '#003399',
             color: 'white',
+            transition: 'width 0.3s ease',
           },
         }}
-        variant="persistent"
+        variant="permanent"
         anchor="left"
-        open={open}
       >
         <Toolbar />
         <Divider />
         <List>
           {menuItems.map((item, index) => (
-            <ListItem
-              component={Link}
-              to={item.route}
-              button
-              key={index}
-              sx={{
-                '&:hover': {
-                  backgroundColor: '#0056b3',
-                },
-                '& .MuiSvgIcon-root': {
-                  color: 'white',
-                  marginRight: 2,
-                },
-                '& .MuiListItemText-primary': {
-                  fontWeight: 'bold',
-                  fontSize: '1rem',
-                  color: 'white',
-                  fontFamily: 'Arial, sans-serif',
-                  letterSpacing: '0.5px',
-                },
-              }}
-            >
-              {item.icon}
-              <ListItemText primary={item.text} />
-            </ListItem>
+            <Tooltip title={open ? '' : item.text} placement="right" key={index}>
+              <ListItem
+                component={Link}
+                to={item.route}
+                button
+                sx={{
+                  '&:hover': {
+                    backgroundColor: '#0056b3',
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: 'white',
+                    marginRight: open ? 2 : 0,
+                  },
+                  '& .MuiListItemText-primary': {
+                    display: open ? 'block' : 'none',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    color: 'white',
+                    fontFamily: 'Arial, sans-serif',
+                    letterSpacing: '0.5px',
+                  },
+                }}
+              >
+                {item.icon}
+                <ListItemText primary={item.text} />
+              </ListItem>
+            </Tooltip>
           ))}
         </List>
         <Divider />
       </Drawer>
+
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           bgcolor: 'background.default',
           p: 3,
-          marginLeft: open ? `${drawerWidth}px` : '0px',
+          marginLeft: open ? `${drawerWidthOpen}px` : `${drawerWidthClosed}px`,
           transition: 'margin 0.3s ease',
         }}
       >
         <Toolbar />
         {children}
       </Box>
+
       <Dialog
         open={logoutDialogOpen}
         onClose={closeLogoutDialog}

@@ -107,17 +107,41 @@ exports.deleteEntree = async (req, res) => {
 
 exports.getTotalEntree = async (req, res) => {
   try {
+    // Étape 1 : Calculer la somme des montants dans la table soldeEntree
     const totalEntree = await prisma.soldeEntree.aggregate({
       _sum: {
         montant: true, // Somme des montants
       },
     });
 
+    // Étape 2 : Calculer la somme des cotisations
+    const totalCotisations = await prisma.cotisation.aggregate({
+      _sum: {
+        montant: true, // Somme des montants des cotisations
+      },
+    });
+
+    // Étape 3 : Calculer la somme des paiements de missions
+    const totalPaiementsMissions = await prisma.paiementMission.aggregate({
+      _sum: {
+        montant: true, // Somme des montants des paiements de missions
+      },
+    });
+
+    // Étape 4 : Additionner les trois montants
+    const sommeTotale =
+      (totalEntree._sum.montant || 0) +
+      (totalCotisations._sum.montant || 0) +
+      (totalPaiementsMissions._sum.montant || 0);
+
+    // Étape 5 : Retourner le résultat
     res.status(200).json({
-      totalEntree: totalEntree._sum.montant || 0, // Retourne 0 si aucune entrée
+      totalEntree: sommeTotale, // La somme totale des entrées
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erreur lors du calcul de la somme des entrées" });
+    res.status(500).json({ error: "Erreur lors du calcul de la somme totale des entrées" });
   }
 };
+
+

@@ -69,3 +69,13 @@ exports.deleteMembre = async (req, res) => {
     res.status(500).json({ error: 'Error deleting membre' });
   }
 };
+
+// COUNT membres
+exports.countMembres = async (req, res) => {
+  try {
+    const count = await prisma.membre.count(); // Compter le nombre total de membres
+    res.json({ totalMembres: count });
+  } catch (error) {
+    res.status(500).json({ error: 'Error counting membres' });
+  }
+};

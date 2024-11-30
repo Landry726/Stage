@@ -22,10 +22,9 @@ exports.createCaisse = async (req, res) => {
 // Lire toutes les caisses avec le total des entrées et sorties
 exports.getAllCaisses = async (req, res) => {
   try {
-    // Récupérer toutes les caisses avec la somme des entrées et des sorties
+    // Récupérer toutes les caisses avec les entrées et sorties
     const caisses = await prisma.caisseSociale.findMany({
       include: {
-        // Inclure les entrées et sorties, avec la somme des montants
         entrees: {
           select: {
             montant: true,
@@ -40,7 +39,7 @@ exports.getAllCaisses = async (req, res) => {
     });
 
     const caissesWithTotals = await Promise.all(caisses.map(async (caisse) => {
-      // Utilisation de la fonction Prisma aggregate pour calculer les totaux des entrées
+      // Étape 1 : Calculer les totaux des entrées liées à la caisse
       const totalEntrees = await prisma.soldeEntree.aggregate({
         _sum: {
           montant: true,
@@ -50,7 +49,7 @@ exports.getAllCaisses = async (req, res) => {
         },
       });
 
-      // Utilisation de la fonction Prisma aggregate pour calculer les totaux des sorties
+      // Étape 2 : Calculer les totaux des sorties liées à la caisse
       const totalSorties = await prisma.soldeSortie.aggregate({
         _sum: {
           montant: true,
@@ -60,14 +59,26 @@ exports.getAllCaisses = async (req, res) => {
         },
       });
 
-      // Récupérer les montants agrégés ou 0 si aucune entrée ou sortie
-      const sommeEntrees = totalEntrees._sum.montant || 0;
+      // Étape 3 : Calculer la somme des cotisations
+      const totalCotisations = await prisma.cotisation.aggregate({
+        _sum: { montant: true },
+      });
+      const montantCotisation = totalCotisations._sum.montant || 0;
+
+      // Étape 4 : Calculer la somme des paiements de missions
+      const totalPaiementsMissions = await prisma.paiementMission.aggregate({
+        _sum: { montant: true },
+      });
+      const montantMission = totalPaiementsMissions._sum.montant || 0;
+
+      // Étape 5 : Additionner les cotisations et paiements de missions aux entrées
+      const sommeEntrees = (totalEntrees._sum.montant || 0) + montantCotisation + montantMission;
       const sommeSorties = totalSorties._sum.montant || 0;
 
-      // Calculer le solde actuel
+      // Étape 6 : Calculer le solde actuel
       const soldeActuel = sommeEntrees - sommeSorties;
 
-      // Mettre à jour la caisse dans la base de données avec le solde actuel
+      // Étape 7 : Mettre à jour le solde actuel dans la base
       await prisma.caisseSociale.update({
         where: { id: caisse.id },
         data: { soldeActuel: soldeActuel },
@@ -81,7 +92,7 @@ exports.getAllCaisses = async (req, res) => {
       };
     }));
 
-    // Retourner les caisses avec les totaux calculés et mis à jour
+    // Retourner les caisses avec les totaux mis à jour
     res.json(caissesWithTotals);
   } catch (error) {
     console.error(error);
@@ -178,3 +189,85 @@ exports.getTotalCaisses = async (req, res) => {
     res.status(500).json({ error: "Erreur lors du calcul du total des caisses" });
   }
 };
+
+exports.getTrends = async (req, res) => {
+  try {
+    // Récupérer toutes les entrées
+    const entrees = await prisma.soldeEntree.findMany({
+      select: {
+        date: true,
+        montant: true,
+      },
+    });
+
+    // Récupérer toutes les sorties
+    const sorties = await prisma.soldeSortie.findMany({
+      select: {
+        date: true,
+        montant: true,
+      },
+    });
+
+    // Calculer la somme totale des cotisations
+    const totalCotisations = await prisma.cotisation.aggregate({
+      _sum: {
+        montant: true, // Somme des montants des cotisations
+      },
+    });
+
+    // Calculer la somme totale des paiements de missions
+    const totalPaiementsMissions = await prisma.paiementMission.aggregate({
+      _sum: {
+        montant: true, // Somme des montants des paiements de missions
+      },
+    });
+
+    // Fonction pour extraire le mois et l'année
+    const formatMonthYear = (date) => {
+      const d = new Date(date);
+      return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`; // Format YYYY-MM
+    };
+
+    // Agréger les données par mois pour les entrées
+    const entreesParMois = entrees.reduce((acc, entree) => {
+      const mois = formatMonthYear(entree.date);
+      acc[mois] = (acc[mois] || 0) + entree.montant;
+      return acc;
+    }, {});
+
+    // Agréger les données par mois pour les sorties
+    const sortiesParMois = sorties.reduce((acc, sortie) => {
+      const mois = formatMonthYear(sortie.date);
+      acc[mois] = (acc[mois] || 0) + sortie.montant;
+      return acc;
+    }, {});
+
+    // Ajouter le total des cotisations et des paiements missions au mois correspondant (mois actuel)
+    const currentMonth = formatMonthYear(new Date());
+    entreesParMois[currentMonth] = 
+      (entreesParMois[currentMonth] || 0) + 
+      (totalCotisations._sum.montant || 0) + 
+      (totalPaiementsMissions._sum.montant || 0);
+
+    // Obtenir tous les mois uniques
+    const allMonths = Array.from(new Set([...Object.keys(entreesParMois), ...Object.keys(sortiesParMois)]));
+
+    // Créer une structure combinée
+    const data = allMonths.map((mois) => ({
+      mois, // Format YYYY-MM
+      entrees: entreesParMois[mois] || 0,
+      sorties: sortiesParMois[mois] || 0,
+    }));
+
+    // Trier par mois (chronologiquement)
+    data.sort((a, b) => new Date(a.mois) - new Date(b.mois));
+
+    // Envoyer les données au client
+    res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des tendances mensuelles' });
+  }
+};
+
+

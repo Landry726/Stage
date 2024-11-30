@@ -84,15 +84,22 @@ const CaisseList = () => {
   }
 
   return (
-    <Box sx={{ padding: '12px', marginTop: '10px', maxHeight: '100vh', overflowY: 'auto', marginLeft: '-220px' }}>
+    <Paper elevation={3}
+    sx={{
+      padding: "15px",
+      marginLeft:  '-220px',
+      maxHeight: '100vh',
+      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+      overflowY: 'auto'
+    }}>
       {/* Toast Container */}
       <ToastContainer />
 
       {/* Titre et bouton de téléchargement */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#003399' }}>
+        {/* <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#003399' }}>
           Caisses
-        </Typography>
+        </Typography> */}
         <Button
           variant="contained"
           color="primary"
@@ -126,7 +133,7 @@ const CaisseList = () => {
           </TableBody>
         </Table>
       </TableContainer>
-    </Box>
+    </Paper>
   );
 };
 

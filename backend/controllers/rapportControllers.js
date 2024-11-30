@@ -14,12 +14,87 @@ const generateExcelReport = async (req, res) => {
       },
     });
 
+    // Récupérer les cotisations et paiements de mission avec les membres
+    const cotisations = await prisma.cotisation.findMany({
+      include: {
+        membre: true,
+      },
+    });
+
+    const paiementsMissions = await prisma.paiementMission.findMany({
+      include: {
+        mission: {
+          include: {
+            membre: true,
+          },
+        },
+      },
+    });
+
     // Créer un nouveau workbook Excel
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Rapport Caisse');
 
-    // Ajouter les colonnes de l'en-tête
-    worksheet.columns = [
+    // Feuille pour les cotisations
+    const cotisationSheet = workbook.addWorksheet('Rapport Cotisations');
+    cotisationSheet.columns = [
+      { header: 'Nom Membre', key: 'nomMembre', width: 30 },
+      { header: 'Date Paiement', key: 'datePaiement', width: 15 },
+      { header: 'Montant', key: 'montant', width: 15 },
+      { header: 'Mois', key: 'mois', width: 15 },
+      { header: 'Statut', key: 'statut', width: 15 },
+    ];
+
+    cotisations.forEach((cotisation) => {
+      cotisationSheet.addRow({
+        nomMembre: cotisation.membre.nom, // Afficher le nom du membre
+        datePaiement: cotisation.datePaiement.toLocaleDateString('fr-FR'), // Format de date DD/MM/YYYY
+        montant: cotisation.montant,
+        mois: cotisation.mois,
+        statut: cotisation.status,
+      });
+    });
+
+    // Appliquer du style : gras pour les en-têtes
+    cotisationSheet.getRow(1).font = { bold: true };
+
+    // Feuille pour les paiements de mission
+    const paiementMissionSheet = workbook.addWorksheet('Rapport Paiements Missions');
+    paiementMissionSheet.columns = [
+      { header: 'Nom Membre', key: 'nomMembre', width: 30 },
+      { header: ' Montant Mission', key: 'mission', width: 20 },
+      { header: 'Mois', key: 'mois', width: 15 },
+      { header: 'Montant', key: 'montant', width: 15 },
+      { header: 'Statut', key: 'statut', width: 15 },
+    ];
+
+    paiementsMissions.forEach((paiement) => {
+      const missionStatus = paiement.restePayer > 0 ? 'Non payé' : 'Payé';
+      const row = paiementMissionSheet.addRow({
+        nomMembre: paiement.mission.membre.nom,
+        mission: paiement.mission.montant,
+        mois: paiement.mission.mois,
+        montant: paiement.montant,
+        statut: missionStatus,
+      });
+
+      // Ajouter du style pour les missions non payées et insuffisantes
+      if (missionStatus === 'Non payé') {
+        row.eachCell((cell) => {
+          cell.style = { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0000' } } }; // Rouge
+        });
+      } else if (missionStatus === 'Insuffisant') {
+        row.eachCell((cell) => {
+          cell.style = { fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: '00FF00' } } }; // Vert
+        });
+      }
+    });
+
+    // Appliquer du style : gras pour les en-têtes
+    paiementMissionSheet.getRow(1).font = { bold: true };
+
+    // Feuille pour la caisse sociale
+    const caisseSheet = workbook.addWorksheet('Rapport Caisse Sociale');
+    caisseSheet.columns = [
       { header: 'Date', key: 'date', width: 15 },
       { header: 'Type', key: 'type', width: 15 },
       { header: 'Montant', key: 'montant', width: 15 },
@@ -29,8 +104,7 @@ const generateExcelReport = async (req, res) => {
     // Parcourir chaque caisse et structurer les données
     caisses.forEach((caisse) => {
       // Ajouter une ligne pour identifier la caisse
-      worksheet.addRow({
-        caisseId: caisse.id,
+      caisseSheet.addRow({
         date: '',
         type: 'Solde Actuel',
         montant: caisse.soldeActuel,
@@ -39,11 +113,10 @@ const generateExcelReport = async (req, res) => {
 
       // Ajouter les données des entrées
       if (caisse.entrees.length > 0) {
-        worksheet.addRow({ type: '--- Entrées ---' }); // Séparation visuelle
+        caisseSheet.addRow({ type: '--- Entrées ---' }); // Séparation visuelle
         caisse.entrees.forEach((entree) => {
-          worksheet.addRow({
-            caisseId: '',
-            date: entree.date.toISOString().split('T')[0],
+          caisseSheet.addRow({
+            date: entree.date.toLocaleDateString('fr-FR'),
             type: 'Entrée',
             montant: entree.montant,
             motif: entree.motif,
@@ -52,8 +125,7 @@ const generateExcelReport = async (req, res) => {
 
         // Ajouter le total des entrées
         const totalEntrees = caisse.entrees.reduce((sum, entree) => sum + entree.montant, 0);
-        worksheet.addRow({
-          caisseId: '',
+        caisseSheet.addRow({
           date: '',
           type: 'Total Entrées',
           montant: totalEntrees,
@@ -63,11 +135,10 @@ const generateExcelReport = async (req, res) => {
 
       // Ajouter les données des sorties
       if (caisse.sorties.length > 0) {
-        worksheet.addRow({ type: '--- Sorties ---' }); // Séparation visuelle
+        caisseSheet.addRow({ type: '--- Sorties ---' }); // Séparation visuelle
         caisse.sorties.forEach((sortie) => {
-          worksheet.addRow({
-            caisseId: '',
-            date: sortie.date.toISOString().split('T')[0],
+          caisseSheet.addRow({
+            date: sortie.date.toLocaleDateString('fr-FR'),
             type: 'Sortie',
             montant: sortie.montant,
             motif: sortie.motif,
@@ -76,8 +147,7 @@ const generateExcelReport = async (req, res) => {
 
         // Ajouter le total des sorties
         const totalSorties = caisse.sorties.reduce((sum, sortie) => sum + sortie.montant, 0);
-        worksheet.addRow({
-          caisseId: '',
+        caisseSheet.addRow({
           date: '',
           type: 'Total Sorties',
           montant: totalSorties,
@@ -86,11 +156,13 @@ const generateExcelReport = async (req, res) => {
       }
 
       // Ligne vide entre caisses
-      worksheet.addRow({});
+      caisseSheet.addRow({});
     });
 
     // Appliquer des styles aux en-têtes
-    worksheet.getRow(1).font = { bold: true };
+    [cotisationSheet, paiementMissionSheet, caisseSheet].forEach((sheet) => {
+      sheet.getRow(1).font = { bold: true };
+    });
 
     // Configurer la réponse HTTP pour le téléchargement
     res.setHeader(
@@ -99,7 +171,7 @@ const generateExcelReport = async (req, res) => {
     );
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename=Rapport_Caisse.xlsx'
+      'attachment; filename=Rapport_Social.xlsx'
     );
 
     // Envoyer le fichier Excel au frontend
