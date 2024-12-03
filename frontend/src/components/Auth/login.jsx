@@ -69,17 +69,16 @@ const Login = () => {
     <Container 
       maxWidth="xs" 
       style={{ 
-        marginLeft: '400px', 
-        marginTop: '10px', 
-        padding: '50px', 
-        borderRadius: '10px', 
+        marginLeft: '530px', 
+        marginTop: '90px', 
+        padding: '30px', 
+        borderRadius: '10px ', 
         boxShadow: '0 4px 20px rgba(0,0,0,0.2)', 
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '80vh',
-        borderColor: 'fcfc03',
+        height: '60vh',
       }}
     >
       {/* Snackbar pour afficher les messages de succès ou d'erreur */}

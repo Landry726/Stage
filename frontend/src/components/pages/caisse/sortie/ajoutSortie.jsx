@@ -48,6 +48,7 @@ const AddSortie = () => {
     try {
       const response = await axios.post("http://localhost:3000/api/sortie", formData); // URL de l'API
       toast.success("Sortie ajoutée avec succès !");
+      
       console.log("Réponse du serveur :", response.data);
 
       // Réinitialisation du formulaire après ajout
@@ -56,6 +57,7 @@ const AddSortie = () => {
         montant: "",
         motif: "",
         caisseId: "",
+        
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout de la sortie :", error);

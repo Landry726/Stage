@@ -21,7 +21,8 @@ import AjoutEntree from './components/pages/caisse/entree/ajoutEntree';
 import AjoutSortie from './components/pages/caisse/sortie/ajoutSortie';
 import Sortie from './components/pages/caisse/sortie/sortie';
 import Entree from './components/pages/caisse/entree/entree';
-import Caiise from './components/pages/caisse/caisse';
+import Caisse from './components/pages/caisse/caisse';
+import DetailPaiement from './components/pages/cotisatons/detailPaiement';
 
 const App = () => {
 
@@ -44,7 +45,9 @@ const App = () => {
         <Route path='/AjoutSortie' element = {<Layout><AjoutSortie/></Layout>}></Route>
         <Route path='/Sortie' element = {<Layout><Sortie/></Layout>}></Route>
         <Route path='/Entree' element = {<Layout><Entree/></Layout>}></Route>
-        <Route path='/Caisse' element = {<Layout><Caiise/></Layout>}></Route>
+        <Route path='/Caisse' element = {<Layout><Caisse/></Layout>}></Route>
+        <Route path='/DetailPaiement/:id' element={<Layout><DetailPaiement /></Layout>} />
+
         {/* Ajoutez d'autres routes ici */}
       </Routes>
       

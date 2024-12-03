@@ -171,14 +171,16 @@ const MembersTable = () => {
     ];
 
     return (
-        <Paper elevation={3}
+        <Paper 
+        elevation={3}
         sx={{
           padding: "10px",
           marginLeft:  '-220px',
           maxHeight: '100vh',
           boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
           overflowY: 'auto'
-        }}>
+        }}
+        >
          <Link to="/ajoutMembre" style={{ textDecoration: 'none' }}>
                     <Button variant="contained" color="primary" startIcon={<AddIcon />} sx={{ mb: 2 }}>
                         Ajouter membre

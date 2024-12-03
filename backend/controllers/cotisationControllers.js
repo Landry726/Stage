@@ -26,9 +26,9 @@ exports.getCotisations = async (req, res) => {
       const formattedDate = cotisation.datePaiement ? format(new Date(cotisation.datePaiement), 'dd/MM/yyyy') : null;
 
       // Extraire et formater le mois en français
-      const moisText = cotisation.datePaiement ? format(new Date(cotisation.datePaiement), 'MMMM', { locale: fr }) : null; // Mois en texte (Janvier, Février, etc.)
+      // const moisText = cotisation.datePaiement ? format(new Date(cotisation.datePaiement), 'MMMM', { locale: fr }) : null; // Mois en texte (Janvier, Février, etc.)
 
-      return { ...cotisation, status, datePaiement: formattedDate, mois: moisText };  // Ajoute le mois en français
+      return { ...cotisation, status, datePaiement: formattedDate };  // Ajoute le mois en français
     });
 
     res.json(cotisationsWithStatus);
@@ -43,7 +43,21 @@ exports.createCotisation = async (req, res) => {
   const { membreId, montant, mois, datePaiement } = req.body;
 
   try {
-    const formattedDate = new Date(datePaiement); // Convertit la date en format Date si nécessaire
+    const formattedDate = new Date(datePaiement); // Convertir la date en format Date si nécessaire
+
+    // Vérifier si une cotisation existe déjà pour ce membre et ce mois
+    const existingCotisation = await prisma.cotisation.findFirst({
+      where: {
+        membreId,
+        mois,
+      },
+    });
+
+    if (existingCotisation) {
+      return res.status(400).json({
+        message: `Le membre a déjà payé pour le mois de ${mois}. Veuillez vérifier les informations.`,
+      });
+    }
 
     // Déterminer le statut en fonction du montant
     let status = 'Non Payé'; // Statut par défaut
@@ -67,7 +81,10 @@ exports.createCotisation = async (req, res) => {
       },
     });
 
-    res.json(newCotisation);
+    res.status(201).json({
+      message: 'Cotisation créée avec succès',
+      cotisation: newCotisation,
+    });
   } catch (error) {
     console.error('Erreur lors de la création de la cotisation:', error);
     res.status(500).json({ error: 'Erreur lors de la création de la cotisation' });
@@ -165,3 +182,44 @@ exports.getCotisationById = async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la récupération de la cotisation' });
   }
 };
+
+exports.getCotisationsByMember = async (req, res) => {
+  const { membreId } = req.params; // ID du membre passé en paramètre
+
+  // Vérifier que membreId est un entier valide
+  if (isNaN(parseInt(membreId))) {
+    return res.status(400).json({ message: 'ID du membre invalide.' });
+  }
+
+  try {
+    // Récupérer toutes les cotisations pour le membre spécifié
+    const cotisations = await prisma.cotisation.findMany({
+      where: { 
+        membreId: parseInt(membreId) // Assurez-vous que membreId est un entier
+      },
+      select: { 
+        mois : true, 
+        datePaiement: true,  // La date de la cotisation
+        montant: true, // Le montant de la cotisation
+        membre: {
+          select: {
+            nom: true, // Le nom du membre (ou tout autre champ associé)
+          }
+        }
+      },
+    });
+
+    // Vérifier si des résultats existent
+    if (cotisations.length === 0) {
+      return res.status(404).json({ message: 'Aucune cotisation trouvée pour ce membre.' });
+    }
+
+    // Renvoyer les informations des cotisations
+    res.json(cotisations);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des cotisations:', error);
+    res.status(500).json({ message: 'Erreur serveur lors de la récupération des cotisations.' });
+  }
+};
+
+

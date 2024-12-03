@@ -21,6 +21,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import PaymentIcon from '@mui/icons-material/Payment';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -31,7 +32,7 @@ const CotisationTable = () => {
     const [cotisations, setCotisations] = useState([]);
     const [membres, setMembres] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [cotisationsPerPage] = useState(4);
+    const [cotisationsPerPage] = useState(5);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [cotisationToEdit, setCotisationToEdit] = useState(null);
@@ -113,6 +114,7 @@ const CotisationTable = () => {
             toast.error(error.message);
         }
     };
+    
 
     const handleEditDialogOpen = (cotisation) => {
         setCotisationToEdit(cotisation);
@@ -205,6 +207,11 @@ const CotisationTable = () => {
                                     <IconButton onClick={() => setDeleteDialogOpen(true)} sx={{ color: 'red' }}>
                                         <DeleteIcon />
                                     </IconButton>
+                                    <IconButton sx={{ color: 'blue' }}>
+                                    <Link to={`/DetailPaiement/${cotisation.membre.id}`}>
+                                            <PaymentIcon />
+                                        </Link>
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -213,7 +220,7 @@ const CotisationTable = () => {
             </TableContainer>
 
             <TablePagination
-                rowsPerPageOptions={[4, 10, 25]}
+                rowsPerPageOptions={[5, 10, 25]}
                 component="div"
                 count={filteredCotisations.length}
                 rowsPerPage={cotisationsPerPage}

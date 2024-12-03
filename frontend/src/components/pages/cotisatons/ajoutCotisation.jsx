@@ -69,7 +69,11 @@ function CotisationForm() {
                 body: JSON.stringify(data),
             });
 
-            if (!response.ok) throw new Error('Erreur lors de l’ajout de la cotisation');
+            // Vérifiez si la réponse n'est pas OK
+                if (!response.ok) {
+                    const errorData = await response.json(); // Analysez le message d'erreur
+                    throw new Error(errorData.message || 'Erreur lors de l’ajout de la cotisation');
+                }
 
             toast.success('Cotisation ajoutée avec succès !');
             setMembreId('');
@@ -171,33 +175,36 @@ function CotisationForm() {
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField
-                                select
-                                label="Mois"
-                                value={mois}
-                                onChange={(e) => setMois(e.target.value)}
-                                fullWidth
-                                required
-                                error={!!errors.mois}
-                                helperText={errors.mois}
-                                sx={{
-                                    backgroundColor: 'white',
-                                    borderRadius: 2,
-                                    '& .MuiInputBase-root': {
-                                        fontSize: '1rem',
-                                        padding: '8px 14px',
-                                    },
-                                }}
-                            >
-                                <MenuItem value="">
-                                    <em>Sélectionnez un mois</em>
-                                </MenuItem>
-                                {Array.from({ length: 12 }, (_, i) => (
-                                    <MenuItem key={i + 1} value={`${i + 1}`}>
-                                        {new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(new Date(0, i))}
+                                    <TextField
+                                    select
+                                    label="Mois"
+                                    value={mois}
+                                    onChange={(e) => setMois(e.target.value)}
+                                    fullWidth
+                                    required
+                                    error={!!errors.mois}
+                                    helperText={errors.mois}
+                                    sx={{
+                                        backgroundColor: 'white',
+                                        borderRadius: 2,
+                                        '& .MuiInputBase-root': {
+                                            fontSize: '1rem',
+                                            padding: '8px 14px',
+                                        },
+                                    }}
+                                >
+                                    <MenuItem value="">
+                                        <em>Sélectionnez un mois</em>
                                     </MenuItem>
-                                ))}
-                            </TextField>
+                                    {Array.from({ length: 12 }, (_, i) => {
+                                        const moisTexte = new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(new Date(0, i));
+                                        return (
+                                            <MenuItem key={i + 1} value={moisTexte}>
+                                                {moisTexte.charAt(0).toUpperCase() + moisTexte.slice(1)}
+                                            </MenuItem>
+                                        );
+                                    })}
+                                </TextField>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField

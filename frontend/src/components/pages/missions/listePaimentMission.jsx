@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import { Edit, Delete, Add as AddIcon } from '@mui/icons-material';
 import axios from 'axios';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // Import ArrowBackIcon
 
 function PaginatedPaymentList() {
   const [paiements, setPaiements] = useState([]);
@@ -95,17 +96,16 @@ function PaginatedPaymentList() {
     paiement.membre.nom.toLowerCase().includes(search.toLowerCase()) ||
     paiement.mission.id.toString().includes(search)
   );
+  const handleBack = () => {
+    navigate('/mission'); // Redirect to the Cotisation List page
+};
 
   return (
     <Paper sx={{ padding: '15px', marginTop: '5px', maxHeight: '120vh', overflowY: 'auto', marginLeft: '-240px' }}>
-      <TextField
-        label="Rechercher un paiement"
-        variant="outlined"
-        fullWidth
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 2 }}
-      />
-      <Button
+      <IconButton onClick={handleBack} sx={{ marginBottom: '20px', color: 'primary.main' }}>
+                <ArrowBackIcon /> {/* Back Icon */}
+            </IconButton>
+       <Button
         variant="contained"
         color="primary"
         startIcon={<AddIcon />}
@@ -114,6 +114,14 @@ function PaginatedPaymentList() {
       >
        Ajouter un paiement
       </Button>
+      <TextField
+        label="Rechercher un paiement"
+        variant="outlined"
+        fullWidth
+        onChange={(e) => setSearch(e.target.value)}
+        sx={{ mb: 2 }}
+      />
+     
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
           <CircularProgress />

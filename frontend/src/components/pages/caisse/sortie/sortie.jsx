@@ -113,7 +113,7 @@ const SortieList = () => {
       </Typography> */}
       <Link to="/AjoutSortie">
         <Button variant="contained" color="primary" startIcon={<AddIcon />} sx={{ mb: 2 }}>
-          Ajouter une entrée
+          Ajouter une sortie
         </Button>
       </Link>
       

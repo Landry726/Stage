@@ -123,6 +123,7 @@ const SimpleTable = () => {
         maxHeight: '100vh',
         overflowY: 'auto',
       }}
+      
     >
       <TableContainer component={Paper} sx={{ maxHeight: 800, overflowY: 'auto', overflowX: 'auto' }}>
         <Table aria-label="user data table">
