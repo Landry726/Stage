@@ -8,9 +8,11 @@ import {
     Typography,
     Container,
     Paper,
+    Box,
 } from '@mui/material';
 import { Person, Work, Email } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom'; // Importez useNavigate
+import { useNavigate } from 'react-router-dom';
+import { ArrowBack, Save } from '@mui/icons-material'; // Importez useNavigate
 
 const AjoutMembre = () => {
     const [newMember, setNewMember] = useState({ nom: '', poste: '', email: '' });
@@ -82,17 +84,23 @@ const AjoutMembre = () => {
 
     return (
         <Container maxWidth="md" sx={{ paddingTop: 4  }}>
-            <Paper  elevation={3}
+            <Box  elevation={3}
                 sx={{
-                    padding: 4,
-                    borderRadius: 3,
-                    boxShadow: 3,
-                    mr : 5,
-                    marginLeft : -20,
-                }}>
-                <Typography variant="h4" align="center" gutterBottom>
-                    Ajouter un Membre
-                </Typography>
+                    maxWidth: 800,
+                    margin: '30px',
+                    padding: 5,
+                    boxShadow: 5,
+                    borderRadius: 2,
+                    bgcolor: 'background.paper',
+                  }}>
+                  <Box display="flex" alignItems="center" mb={3}>
+          <IconButton onClick={() => navigate('/listePaimentMission')} sx={{ mr: 1 ,color: 'primary.main'}}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h5" component="h1">
+            Ajouter Membre
+          </Typography>
+        </Box>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
                         <TextField
@@ -111,12 +119,7 @@ const AjoutMembre = () => {
                                 ),
                             }}
                             variant="outlined"
-                            size="medium"  // Agrandit le champ de texte
-                            style={{
-                                marginBottom: '20px', 
-
-                                borderRadius: '10px',  // Coins arrondis
-                            }} // Espacement sous le champ
+                           
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -137,10 +140,7 @@ const AjoutMembre = () => {
                             }}
                             variant="outlined"
                             size="medium" // Agrandit le champ de texte
-                            style={{
-                                marginBottom: '20px',
-                                borderRadius: '10px',  // Coins arrondis
-                            }} // Espacement sous le champ
+                           
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -160,50 +160,19 @@ const AjoutMembre = () => {
                                 ),
                             }}
                             variant="outlined"
-                            size="medium" // Agrandit le champ de texte
-                            style={{
-                                marginBottom: '20px',
-                                borderRadius: '10px',  // Coins arrondis
-                            }} // Espacement sous le champ
+                            sx={{ mb: 3 }}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
-                            <Button
-                                variant="outlined"
-                                onClick={handleCancel}
-                                fullWidth
-                                sx={{
-                                    padding: '12px',
-                                    backgroundColor: '#ff4d4d',
-                                    color: 'white',
-                                    borderRadius: '8px',
-                                    fontSize: '1rem',
-                                    border: '1px solid #cc0000',
-                                    '&:hover': {
-                                        backgroundColor: '#cc0000',
-                                    },
-                                }}
-                            >
-                                Annuler
-                            </Button>
-                        </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <Button variant="contained" color="primary" onClick={handleAddMember} sx={{
-                                    padding: '12px',
-                                    background: 'linear-gradient(to right, #007bff, #0056b3)',
-                                    color: 'white',
-                                    borderRadius: '8px',
-                                    fontSize: '1rem',
-                                    border: '1px solid #0056b3',
-                                    '&:hover': {
-                                        background: 'linear-gradient(to right, #0056b3, #004494)',
-                                    },
-                                }} fullWidth>
+
+                        <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={handleAddMember}
+                        fullWidth  >
                             Ajouter
                         </Button>
-                    </Grid>
                 </Grid>
-            </Paper>
+            </Box>
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}

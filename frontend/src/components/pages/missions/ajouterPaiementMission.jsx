@@ -100,21 +100,21 @@ function PaymentForm() {
     <Box
       sx={{
         maxWidth: 800,
-        margin: '80px',
-        padding: 4,
+        margin: '30px',
+        padding: 5,
         boxShadow: 5,
         borderRadius: 2,
         bgcolor: 'background.paper',
       }}
     >
-      <Box display="flex" alignItems="center" mb={3}>
-        <IconButton onClick={() => navigate('/listePaimentMission')} sx={{ mr: 1 ,color: 'primary.main'}}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant="h5" component="h1">
-          Enregistrer un Paiement
-        </Typography>
-      </Box>
+        <Box display="flex" alignItems="center" mb={3}>
+          <IconButton onClick={() => navigate('/listePaimentMission')} sx={{ mr: 1 ,color: 'primary.main'}}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h5" component="h1">
+            Enregistrer un Paiement
+          </Typography>
+        </Box>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth sx={{ mb: 3 }}>
           <InputLabel id="membre-label">Membre</InputLabel>

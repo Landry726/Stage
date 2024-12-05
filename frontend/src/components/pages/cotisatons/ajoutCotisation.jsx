@@ -8,8 +8,15 @@ import {
     Grid,
     InputAdornment,
     Paper,
+    IconButton,
+    Box
 } from '@mui/material';
-import { AccountCircle, MonetizationOn, CalendarToday } from '@mui/icons-material';
+import { 
+    AccountCircle, 
+    MonetizationOn, 
+    CalendarToday, 
+    ArrowBack 
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -69,11 +76,10 @@ function CotisationForm() {
                 body: JSON.stringify(data),
             });
 
-            // Vérifiez si la réponse n'est pas OK
-                if (!response.ok) {
-                    const errorData = await response.json(); // Analysez le message d'erreur
-                    throw new Error(errorData.message || 'Erreur lors de l’ajout de la cotisation');
-                }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de l’ajout de la cotisation');
+            }
 
             toast.success('Cotisation ajoutée avec succès !');
             setMembreId('');
@@ -90,25 +96,27 @@ function CotisationForm() {
         }
     };
 
-    const handleCancel = () => {
-        navigate('/cotisation'); // Retourner à la liste des cotisations
-    };
-
     return (
-        <Container maxWidth="lg" sx={{ paddingTop: 4  }}>
+        <Container maxWidth="md" sx={{ paddingTop: 4 }}>
             <Paper
                 elevation={3}
                 sx={{
-                    padding: 4,
-                    borderRadius: 3,
-                    boxShadow: 3,
-                    mr : 5,
-                    marginLeft : -15,
+                    maxWidth: 800,
+                    margin: '-25px',
+                    padding: 5,
+                    boxShadow: 5,
+                    borderRadius: 2,
+                    bgcolor: 'background.paper',
                 }}
             >
-                <Typography variant="h5" gutterBottom align="center" sx={{ marginBottom: 3 }}>
-                    Ajouter un paiement
-                </Typography>
+                <Box display="flex" alignItems="center" mb={3}>
+                    <IconButton onClick={() => navigate('/cotisation')} sx={{ mr: 1 ,color: 'primary.main'}}>
+                    <ArrowBack />
+                    </IconButton>
+                    <Typography variant="h5" component="h1">
+                    Paiement Cotisation
+                    </Typography>
+                </Box>
                 <form onSubmit={handleSubmit}>
                     <Grid container spacing={3}>
                         <Grid item xs={12}>
@@ -131,10 +139,6 @@ function CotisationForm() {
                                 sx={{
                                     backgroundColor: 'white',
                                     borderRadius: 2,
-                                    '& .MuiInputBase-root': {
-                                        fontSize: '1rem',
-                                        padding: '8px 14px',
-                                    },
                                 }}
                             >
                                 <MenuItem value="">
@@ -167,44 +171,36 @@ function CotisationForm() {
                                 sx={{
                                     backgroundColor: 'white',
                                     borderRadius: 2,
-                                    '& .MuiInputBase-root': {
-                                        fontSize: '1rem',
-                                        padding: '8px 14px',
-                                    },
                                 }}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                                    <TextField
-                                    select
-                                    label="Mois"
-                                    value={mois}
-                                    onChange={(e) => setMois(e.target.value)}
-                                    fullWidth
-                                    required
-                                    error={!!errors.mois}
-                                    helperText={errors.mois}
-                                    sx={{
-                                        backgroundColor: 'white',
-                                        borderRadius: 2,
-                                        '& .MuiInputBase-root': {
-                                            fontSize: '1rem',
-                                            padding: '8px 14px',
-                                        },
-                                    }}
-                                >
-                                    <MenuItem value="">
-                                        <em>Sélectionnez un mois</em>
-                                    </MenuItem>
-                                    {Array.from({ length: 12 }, (_, i) => {
-                                        const moisTexte = new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(new Date(0, i));
-                                        return (
-                                            <MenuItem key={i + 1} value={moisTexte}>
-                                                {moisTexte.charAt(0).toUpperCase() + moisTexte.slice(1)}
-                                            </MenuItem>
-                                        );
-                                    })}
-                                </TextField>
+                            <TextField
+                                select
+                                label="Mois"
+                                value={mois}
+                                onChange={(e) => setMois(e.target.value)}
+                                fullWidth
+                                required
+                                error={!!errors.mois}
+                                helperText={errors.mois}
+                                sx={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 2,
+                                }}
+                            >
+                                <MenuItem value="">
+                                    <em>Sélectionnez un mois</em>
+                                </MenuItem>
+                                {Array.from({ length: 12 }, (_, i) => {
+                                    const moisTexte = new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(new Date(0, i));
+                                    return (
+                                        <MenuItem key={i + 1} value={moisTexte}>
+                                            {moisTexte.charAt(0).toUpperCase() + moisTexte.slice(1)}
+                                        </MenuItem>
+                                    );
+                                })}
+                            </TextField>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
@@ -226,34 +222,10 @@ function CotisationForm() {
                                 sx={{
                                     backgroundColor: 'white',
                                     borderRadius: 2,
-                                    '& .MuiInputBase-root': {
-                                        fontSize: '1rem',
-                                        padding: '8px 14px',
-                                    },
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <Button
-                                variant="outlined"
-                                onClick={handleCancel}
-                                fullWidth
-                                sx={{
-                                    padding: '12px',
-                                    backgroundColor: '#ff4d4d',
-                                    color: 'white',
-                                    borderRadius: '8px',
-                                    fontSize: '1rem',
-                                    border: '1px solid #cc0000',
-                                    '&:hover': {
-                                        backgroundColor: '#cc0000',
-                                    },
-                                }}
-                            >
-                                Annuler
-                            </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12}>
                             <Button
                                 variant="contained"
                                 color="primary"
@@ -264,17 +236,11 @@ function CotisationForm() {
                                     background: 'linear-gradient(to right, #007bff, #0056b3)',
                                     color: 'white',
                                     borderRadius: '8px',
-                                    fontSize: '1rem',
-                                    border: '1px solid #0056b3',
-                                    '&:hover': {
-                                        background: 'linear-gradient(to right, #0056b3, #004494)',
-                                    },
                                 }}
                             >
                                 Ajouter
                             </Button>
                         </Grid>
-                       
                     </Grid>
                 </form>
                 <ToastContainer />

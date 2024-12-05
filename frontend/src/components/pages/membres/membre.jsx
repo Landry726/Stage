@@ -215,10 +215,10 @@ const MembersTable = () => {
                                     if (column.id === 'actions') {
                                         return (
                                             <TableCell key={column.id} align="center">
-                                                <IconButton onClick={() => handleOpen(member)} color="primary" size={isSmallScreen ? "small" : "medium"}>
+                                                <IconButton sx={{ color: 'orange' }}  onClick={() => handleOpen(member)} color="primary" size={isSmallScreen ? "small" : "medium"}>
                                                     <EditIcon fontSize={isSmallScreen ? "small" : "medium"} />
                                                 </IconButton>
-                                                <IconButton onClick={() => handleOpenDeleteConfirmation(member)} color="secondary" size={isSmallScreen ? "small" : "medium"}>
+                                                <IconButton sx={{ color: 'red' }} onClick={() => handleOpenDeleteConfirmation(member)} color="secondary" size={isSmallScreen ? "small" : "medium"}>
                                                     <DeleteIcon fontSize={isSmallScreen ? "small" : "medium"} />
                                                 </IconButton>
                                             </TableCell>

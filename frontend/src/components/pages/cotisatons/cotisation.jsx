@@ -141,7 +141,8 @@ const CotisationTable = () => {
     });
 
     return (
-        <Paper sx={{ padding: '15px', marginTop: '10px', maxHeight: '100vh', overflowY: 'auto', marginLeft: '-220px' }}>
+        <Paper sx={{ padding: '10px', marginTop: '10px', maxHeight: '100vh', overflowY: 'auto', marginLeft: '-220px' }}>
+             
             <Link to="/ajoutCotisation">
                 <Button variant="contained" color="primary" sx={{ marginBottom: '16px' }} startIcon={<AddIcon />}>
                     Ajouter un Paiement

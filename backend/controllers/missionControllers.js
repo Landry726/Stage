@@ -64,21 +64,43 @@ exports.createMission = async (req, res) => {
       return res.status(400).json({ error: 'Montant invalide fourni' });
     }
 
-    // Formatage de la date (si "mois" est au format 'YYYY-MM', on ajoute '-01' pour en faire une date valide)
-    const newMission = await prisma.mission.create({
-      data: {
+    // Formatage de la date (ajout de '-01' pour former une date valide)
+    const formattedMois = new Date(`${mois}-01`);
+
+    // Vérifier si la mission existe déjà
+    const existingMission = await prisma.mission.findFirst({
+      where: {
         membreId,
-        montant: montantFloat,  // Envoi du montant converti en tant que Float
-        mois: new Date(mois + '-01')  // Ajout '-01' pour former une date valide
+        mois: formattedMois, // Vérifie la mission du même membre pour le même mois
       },
     });
 
-    res.json(newMission);
+    if (existingMission) {
+      return res.status(400).json({ error: 'Une mission pour ce membre et ce mois existe déjà' });
+    }
+
+    // Créer la mission si elle n'existe pas
+    const newMission = await prisma.mission.create({
+      data: {
+        membreId,
+        montant: montantFloat, // Envoi du montant converti en tant que Float
+        mois: formattedMois,
+      },
+    });
+
+    res.json({
+      message: 'Mission créée avec succès',
+      mission: newMission,
+    });
   } catch (error) {
-    console.error(error);  // Log l'erreur pour déboguer
-    res.status(500).json({ error: 'Erreur lors de la création de la mission', details: error.message });
+    console.error(error); // Log l'erreur pour déboguer
+    res.status(500).json({
+      error: 'Erreur lors de la création de la mission',
+      details: error.message,
+    });
   }
 };
+
 
 
 exports.updateMission = async (req, res) => {

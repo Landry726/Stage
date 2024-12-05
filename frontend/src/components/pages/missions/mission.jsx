@@ -22,6 +22,7 @@ import {
   MenuItem,  // Import MenuItem pour chaque mois
 } from '@mui/material';
 import { Add as AddIcon, List as ListIcon } from '@mui/icons-material';
+import AddCardIcon from '@mui/icons-material/AddCard';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { toast } from 'react-toastify';  // Import Toastify pour notifications
 import { Link } from 'react-router-dom'; // Import Link from react-router-dom
@@ -139,6 +140,12 @@ const MissionList = () => {
       <Link to="/listePaimentMission">
         <Button variant="contained" color="primary" style={{ marginRight: 30 , marginBottom : 20 }} startIcon={<ListIcon />}>
           Liste des paiements
+        </Button>
+      </Link>
+
+      <Link to="/ajoutPaimentMisison">
+        <Button variant="contained" color="primary" style={{ marginRight: 30 , marginBottom : 20 }} startIcon={<AddCardIcon />}>
+         Faire un paiement
         </Button>
       </Link>
 
