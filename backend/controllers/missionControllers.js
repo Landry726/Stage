@@ -3,33 +3,33 @@ const prisma = new PrismaClient();
 
 
 // GET all missions
-exports.getMissions = async (req, res) => {
-  try {
-    const missions = await prisma.mission.findMany({
-      include: { membre: true },
-    });
+  exports.getMissions = async (req, res) => {
+    try {
+      const missions = await prisma.mission.findMany({
+        include: { membre: true },
+      });
 
-    // Tableau des mois en texte
-    const months = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-    ];
+      // Tableau des mois en texte
+      const months = [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      ];
 
-    // Formater le mois
-    const missionsWithMonthText = missions.map(mission => {
-      const mois = mission.mois; // Supposons que 'mois' est un champ de type Date
-      const monthName = mois ? months[mois.getMonth()] : null; // Récupère le nom du mois
-      return {
-        ...mission,
-        mois: monthName, // Remplace le champ 'mois' par le nom du mois
-      };
-    });
+      // Formater le mois
+      const missionsWithMonthText = missions.map(mission => {
+        const mois = mission.mois; // Supposons que 'mois' est un champ de type Date
+        const monthName = mois ? months[mois.getMonth()] : null; // Récupère le nom du mois
+        return {
+          ...mission,
+          mois: monthName, // Remplace le champ 'mois' par le nom du mois
+        };
+      });
 
-    res.json(missionsWithMonthText);
-  } catch (error) {
-    res.status(500).json({ error: 'Error fetching missions' });
-  }
-};
+      res.json(missionsWithMonthText);
+    } catch (error) {
+      res.status(500).json({ error: 'Error fetching missions' });
+    }
+  };
 
 
 

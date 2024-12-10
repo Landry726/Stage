@@ -10,11 +10,11 @@ import {
   Box,
   IconButton,
   Typography,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { ArrowBack, Save } from '@mui/icons-material';
-import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import 'react-toastify/dist/ReactToastify.css';
 
 function PaymentForm() {
   const [membreId, setMembreId] = useState('');
@@ -25,6 +25,7 @@ function PaymentForm() {
   const [missions, setMissions] = useState([]);
   const [datePaiement, setDatePaiement] = useState('');
   const [filteredMissions, setFilteredMissions] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ function PaymentForm() {
         const response = await axios.get('http://localhost:3000/api/membres');
         setMembres(response.data);
       } catch (error) {
-        toast.error("Erreur lors du chargement des membres");
+        showSnackbar('Erreur lors du chargement des membres', 'error');
       }
     };
 
@@ -42,7 +43,7 @@ function PaymentForm() {
         const response = await axios.get('http://localhost:3000/api/missions');
         setMissions(response.data);
       } catch (error) {
-        toast.error("Erreur lors du chargement des missions");
+        showSnackbar('Erreur lors du chargement des missions', 'error');
       }
     };
 
@@ -66,11 +67,19 @@ function PaymentForm() {
     setMois(selectedMission ? selectedMission.mois : '');
   }, [missionId, filteredMissions]);
 
+  const showSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ open: false, message: '', severity: '' });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!membreId || !missionId || !montantPayer || !datePaiement) {
-      toast.error("Tous les champs doivent être remplis.");
+      showSnackbar('Tous les champs doivent être remplis.', 'error');
       return;
     }
 
@@ -83,7 +92,7 @@ function PaymentForm() {
         datePaiement,
       });
 
-      toast.success("Paiement enregistré avec succès");
+      showSnackbar('Paiement enregistré avec succès', 'success');
       setTimeout(() => navigate('/listePaimentMission'), 2000);
       setMembreId('');
       setMissionId('');
@@ -92,7 +101,7 @@ function PaymentForm() {
       setDatePaiement('');
     } catch (error) {
       const errorMsg = error.response?.data?.error || "Erreur lors de l'enregistrement du paiement";
-      toast.error(errorMsg);
+      showSnackbar(errorMsg, 'error');
     }
   };
 
@@ -107,14 +116,14 @@ function PaymentForm() {
         bgcolor: 'background.paper',
       }}
     >
-        <Box display="flex" alignItems="center" mb={3}>
-          <IconButton onClick={() => navigate('/listePaimentMission')} sx={{ mr: 1 ,color: 'primary.main'}}>
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h5" component="h1">
-            Enregistrer un Paiement
-          </Typography>
-        </Box>
+      <Box display="flex" alignItems="center" mb={3}>
+        <IconButton onClick={() => navigate('/listePaimentMission')} sx={{ mr: 1, color: 'primary.main' }}>
+          <ArrowBack />
+        </IconButton>
+        <Typography variant="h5" component="h1">
+          Enregistrer un Paiement
+        </Typography>
+      </Box>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth sx={{ mb: 3 }}>
           <InputLabel id="membre-label">Membre</InputLabel>
@@ -183,7 +192,18 @@ function PaymentForm() {
           Enregistrer
         </Button>
       </form>
-      <ToastContainer />
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }} variant='filled'>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

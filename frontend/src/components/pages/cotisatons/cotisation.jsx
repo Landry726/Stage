@@ -19,28 +19,28 @@ import {
     TablePagination,
     Alert,
     Typography,
+    Snackbar,
 } from '@mui/material';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Link } from 'react-router-dom';
 import PaymentIcon from '@mui/icons-material/Payment';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { toast } from 'react-toastify';
+
 import 'react-toastify/dist/ReactToastify.css';
 
 const CotisationTable = () => {
     const [cotisations, setCotisations] = useState([]);
     const [membres, setMembres] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [cotisationsPerPage] = useState(5);
+    const [cotisationsPerPage ,setCotisationsPerPage] = useState(5);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [cotisationToEdit, setCotisationToEdit] = useState(null);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertSeverity, setAlertSeverity] = useState('success');
-    const [showAlert, setShowAlert] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedMonth, setSelectedMonth] = useState('');
+    const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
     useEffect(() => {
         fetchCotisations();
@@ -53,9 +53,11 @@ const CotisationTable = () => {
             const data = await response.json();
             setCotisations(data);
         } catch (error) {
-            setAlertMessage('Erreur lors de la récupération des cotisations');
-            setAlertSeverity('error');
-            setShowAlert(true);
+            setSnackbar({
+                open: true,
+                message: "Erreur lors de la récupération des cotisations.",
+                severity: "error",
+              });
         }
     };
 
@@ -76,13 +78,13 @@ const CotisationTable = () => {
             });
 
             if (response.ok) {
-                toast.success('Cotisation supprimée avec succès.');
+                setSnackbar({ open: true, message: "Cotisation supprimée avec succès.", severity: "success" });
                 fetchCotisations();
             } else {
                 throw new Error('Erreur lors de la suppression de la cotisation.');
             }
         } catch (error) {
-            toast.error(error.message);
+            setSnackbar({ open: true, message: error.message, severity: "error" });
         } finally {
             setDeleteDialogOpen(false);
         }
@@ -104,14 +106,14 @@ const CotisationTable = () => {
             });
 
             if (response.ok) {
-                toast.success('Cotisation mise à jour avec succès.');
+                setSnackbar({ open: true, message: "Cotisation mise à jour avec succès.", severity: "success" });
                 fetchCotisations(); // Rafraîchir la liste des cotisations
                 setEditDialogOpen(false); // Fermer la modal
             } else {
                 throw new Error('Erreur lors de la mise à jour de la cotisation.');
             }
         } catch (error) {
-            toast.error(error.message);
+            setSnackbar({ open: true, message: error.message, severity: "error" });
         }
     };
     
@@ -225,19 +227,23 @@ const CotisationTable = () => {
                 component="div"
                 count={filteredCotisations.length}
                 rowsPerPage={cotisationsPerPage}
-                page={currentPage - 1}
+                page={currentPage}
                 onPageChange={handleChangePage}
+              
             />
 
             {/* Dialog de suppression */}
             <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-                <DialogTitle>Confirmer la suppression</DialogTitle>
+                <DialogTitle>
+                <WarningAmberIcon sx={{ color: 'red', marginRight: 2 }} />
+                Confirmer la suppression
+                </DialogTitle>
                 <DialogContent>
                     <Typography>Voulez-vous vraiment supprimer cette cotisation ?</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)}>Annuler</Button>
-                    <Button onClick={() => handleDelete(cotisationToEdit.id)} color="error">
+                    <Button onClick={() => setDeleteDialogOpen(false)} variant='contained' color='primary'>Annuler</Button>
+                    <Button onClick={() => handleDelete(cotisationToEdit.id)} variant='contained' color="error">
                         Supprimer
                     </Button>
                 </DialogActions>
@@ -297,19 +303,22 @@ const CotisationTable = () => {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setEditDialogOpen(false)}>Annuler</Button>
-                    <Button onClick={handleUpdate} color="primary">
-                        Mettre à jour
+                    <Button onClick={() => setEditDialogOpen(false)} variant='contained' color='error'>Annuler</Button>
+                    <Button onClick={handleUpdate} variant='contained' color='primary'>
+                        Enregistrer
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            {/* Alert */}
-            {showAlert && (
-                <Alert severity={alertSeverity} onClose={() => setShowAlert(false)}>
-                    {alertMessage}
-                </Alert>
-            )}
+            <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert severity={snackbar.severity} sx={{ width: "100%" }}   variant='filled'>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
         </Paper>
     );
 };

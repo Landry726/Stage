@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
-  TextField, Button, Grid, Typography, Box, InputAdornment, MenuItem, FormControl, Select, InputLabel,IconButton
+  TextField, Button, Grid, Typography, Box, InputAdornment, MenuItem, FormControl, Select, InputLabel,IconButton,Snackbar,Alert
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDollarSign, faCalendarAlt, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS pour le toast
 import { useNavigate } from 'react-router-dom';
 import { ArrowBack, Save } from '@mui/icons-material';
 
 const MissionForm = () => {
   const [membres, setMembres] = useState([]);
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const navigate = useNavigate();
 
   // Récupérer les membres depuis l'API
@@ -35,11 +36,15 @@ const MissionForm = () => {
       const response = await axios.post('http://localhost:3000/api/missions', data);
 
       if (response.status === 200) {
-        toast.success("Mission ajoutée avec succès !");
+        setSnackbarMessage('Membre ajouté avec succès.');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
         navigate('/mission');
       }
     } catch (error) {
-      toast.error("Erreur lors de l'ajout de la mission");
+      setSnackbarMessage(`Erreur lors de l'ajout : ${error.message}`);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
@@ -164,6 +169,22 @@ const MissionForm = () => {
           </Grid>
         </Grid>
       </form>
+      <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={() => setSnackbarOpen(false)}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                      variant='filled'
+
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
     </Box>
   );
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Button,
-  Box,
+  Alert,
   Table,
   TableBody,
   TableCell,
@@ -21,11 +21,12 @@ import {
   TablePagination,
   MenuItem,  // Import MenuItem pour chaque mois
 } from '@mui/material';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Add as AddIcon, List as ListIcon } from '@mui/icons-material';
 import AddCardIcon from '@mui/icons-material/AddCard';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { toast } from 'react-toastify';  // Import Toastify pour notifications
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+
+import { Link } from 'react-router-dom'; 
 
 const MissionList = () => {
   const [missions, setMissions] = useState([]);
@@ -35,6 +36,7 @@ const MissionList = () => {
   const [editMission, setEditMission] = useState(null);
   const [missionToDelete, setMissionToDelete] = useState(null);  
   const [alert, setAlert] = useState({ open: false, message: '', severity: '' });
+
   
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Par défaut 5 missions par page
@@ -77,10 +79,10 @@ const MissionList = () => {
       const response = await axios.put(`http://localhost:3000/api/missions/${id}`, { membreId, montant, mois });
       setMissions(missions.map(mission => (mission.id === id ? response.data : mission)));
       setFilteredMissions(filteredMissions.map(mission => (mission.id === id ? response.data : mission)));
-      toast.success('Mission mise à jour avec succès');
+      setAlert({ open: true, message: 'Mission mise à jour avec succès', severity: 'success' });
       setOpenDialog(false);
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour de la mission');
+      setAlert({ open: true, message: 'Erreur lors de la mise à jour de la mission', severity: 'error' });
     }
   };
 
@@ -89,10 +91,10 @@ const MissionList = () => {
       await axios.delete(`http://localhost:3000/api/missions/${missionToDelete.id}`);
       setMissions(missions.filter(mission => mission.id !== missionToDelete.id));
       setFilteredMissions(filteredMissions.filter(mission => mission.id !== missionToDelete.id));
-      toast.success('Mission supprimée avec succès');
+      setAlert({ open: true, message: 'Mission supprimée avec succès', severity: 'success' });
       setOpenDeleteDialog(false);
     } catch (error) {
-      toast.error('Erreur lors de la suppression de la mission');
+      setAlert({ open: true, message: 'Erreur lors de la suppression de la mission', severity: 'error' });
     }
   };
 
@@ -193,7 +195,7 @@ const MissionList = () => {
                   </IconButton>
                 </TableCell>
               </TableRow>
-            ))}
+            ))}   
           </TableBody>
         </Table>
       </TableContainer>
@@ -239,10 +241,10 @@ const MissionList = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary">
+          <Button onClick={handleCloseDialog} variant='contained' color='error'>
             Annuler
           </Button>
-          <Button onClick={handleUpdate} color="primary">
+          <Button onClick={handleUpdate}variant='contained' color='primary'>
             Sauvegarder
           </Button>
         </DialogActions>
@@ -250,28 +252,36 @@ const MissionList = () => {
 
       {/* Dialog pour la suppression */}
       <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Supprimer la Mission</DialogTitle>
+        <DialogTitle>
+        <WarningAmberIcon sx={{ color: 'red', marginRight: 2 }} />Supprimer la Mission</DialogTitle>
         <DialogContent>
           <Typography>Êtes-vous sûr de vouloir supprimer cette mission ?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="primary">
+          <Button onClick={handleCloseDeleteDialog} variant='contained' color='primary'>
             Annuler
           </Button>
-          <Button onClick={handleDelete} color="primary">
+          <Button onClick={handleDelete}  variant='contained' color='error'>
             Supprimer
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Toast Notification */}
-      <Snackbar
-        open={alert.open}
-        autoHideDuration={6000}
+          <Snackbar
+      open={alert.open}
+      autoHideDuration={6000}
+      onClose={() => setAlert({ ...alert, open: false })}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }} 
+    >
+      <Alert
         onClose={() => setAlert({ ...alert, open: false })}
-        message={alert.message}
-        severity={alert.severity}
-      />
+        severity={alert.severity} 
+        sx={{ width: '100%' }}
+           variant='filled'
+      >
+        {alert.message}
+      </Alert>
+    </Snackbar>
     </Paper>
   );
 };

@@ -16,7 +16,7 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    
+
     // Validation des champs
     if (!username || !email || !password) {
       setError('Veuillez remplir tous les champs.');
@@ -24,19 +24,17 @@ const Register = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/register', {
+      await axios.post('http://localhost:3000/api/auth/register', {
         username,
         email,
         password,
       });
-      console.log("Connexion réussie");
       setSuccess(true);
       setTimeout(() => {
         navigate('/');
       }, 2000);
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'utilisateur:', error);
-      setError(error.response.data.message);
+      setError(error.response?.data?.message || 'Erreur inattendue.');
     }
   };
 
@@ -49,21 +47,42 @@ const Register = () => {
   };
 
   return (
-    <Container 
-      maxWidth="xs" 
-      style={{ 
-        marginLeft: '400px', 
-        marginTop: '10px', 
-        padding: '50px', 
-        borderRadius: '10px', 
-        boxShadow: '0 4px 20px rgba(0,0,0,0.2)', 
+    <Container
+      maxWidth="xs"
+      style={{
+        marginTop: '90px',
+        padding: '30px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '80vh' 
+        height: '70vh',
       }}
     >
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert severity="success" variant="filled">
+          Inscription réussie
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={Boolean(error)}
+        autoHideDuration={3000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert severity="error" variant="filled">
+          {error}
+        </Alert>
+      </Snackbar>
+
       <img src={logo} alt="Logo" style={{ width: '100px' }} />
       <Typography variant="h4" component="h1" gutterBottom>
         Inscription
@@ -76,7 +95,7 @@ const Register = () => {
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         InputProps={{
-          startAdornment: <Person position="start" />, // Icône pour le nom d'utilisateur
+          startAdornment: <Person position="start" />,
         }}
       />
       <TextField
@@ -87,7 +106,7 @@ const Register = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         InputProps={{
-          startAdornment: <Email position="start" />, // Icône d'email
+          startAdornment: <Email position="start" />,
         }}
       />
       <TextField
@@ -99,56 +118,37 @@ const Register = () => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         InputProps={{
-          startAdornment: <Lock position="start" />, // Icône de verrou
+          startAdornment: <Lock position="start" />,
           endAdornment: (
-            <IconButton 
-              onClick={() => setShowPassword(!showPassword)} // Toggle pour afficher/masquer le mot de passe
-              edge="end"
-              style={{ padding: 0 }} // Pour éviter l'espacement excessif
-            >
+            <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
               {showPassword ? <Visibility /> : <VisibilityOff />}
             </IconButton>
           ),
         }}
       />
-      <Button 
-        variant="contained" 
-        style={{ 
-          backgroundColor: '#ffd700', // Couleur jaune adoucie
-          color: '#000', // Couleur du texte
+      <Button
+        variant="contained"
+        style={{
+          backgroundColor: '#ffc107', // Couleur jaune doré
+          color: '#000',
           marginTop: '20px',
-          borderRadius: '10px'
-        }} 
-        fullWidth 
+          borderRadius: '10px',
+          padding: '10px 20px',
+          fontSize: '16px',
+          transition: 'background-color 0.3s, transform 0.2s',
+        }}
+        fullWidth
         onClick={handleRegister}
       >
         S'inscrire
       </Button>
 
       <Typography variant="body2" style={{ marginTop: '20px', color: 'black', textAlign: 'center' }}>
-        Vous avez déjà un compte ? <Link to="/" style={{ textDecoration: 'none', color: '#0F09C8' }}>Connectez-vous ici</Link>
+        Vous avez déjà un compte ?{' '}
+        <Link to="/" style={{ textDecoration: 'none', color: '#0F09C8' }}>
+          Connectez-vous ici
+        </Link>
       </Typography>
-
-      {/* Snackbar pour afficher les messages de succès ou d'erreur */}
-      <Snackbar
-        open={success}
-        autoHideDuration={3000}
-        onClose={handleClose}
-      >
-        <Alert severity='success' variant='filled'>
-          Inscription réussie
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={Boolean(error)}
-        autoHideDuration={3000}
-        onClose={handleClose}
-      >
-        <Alert severity='error' variant='filled'>
-          {error}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };

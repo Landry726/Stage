@@ -18,10 +18,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { toast } from 'react-toastify';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 const SimpleTable = () => {
   const [data, setData] = useState([]);
@@ -31,6 +33,10 @@ const SimpleTable = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   useEffect(() => {
     fetchData();
@@ -75,14 +81,18 @@ const SimpleTable = () => {
       });
 
       if (response.ok) {
-        toast.success('User updated successfully!');
+        setSnackbarMessage('Utilisateur modifié avec succès.');
+        setSnackbarSeverity('success');
         fetchData();
       } else {
-        toast.error('Failed to update user.');
+        setSnackbarMessage("Échec de la modification de l'utilisateur.");
+        setSnackbarSeverity('error');
       }
     } catch (error) {
-      console.error('Error updating user:', error);
+      setSnackbarMessage("Erreur lors de la modification de l'utilisateur.");
+      setSnackbarSeverity('error');
     }
+    setSnackbarOpen(true);
     handleEditClose();
   };
 
@@ -103,54 +113,59 @@ const SimpleTable = () => {
       });
 
       if (response.ok) {
-        toast.success('User deleted successfully!');
+        setSnackbarMessage('Utilisateur supprimé avec succès.');
+        setSnackbarSeverity('success');
         fetchData();
       } else {
-        toast.error('Failed to delete user.');
+        setSnackbarMessage("Échec de la suppression de l'utilisateur.");
+        setSnackbarSeverity('error');
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
+      setSnackbarMessage("Erreur lors de la suppression de l'utilisateur.");
+      setSnackbarSeverity('error');
     }
+    setSnackbarOpen(true);
     handleDeleteClose();
   };
 
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        padding: "18px",
-        marginLeft: '-210px',
-        maxHeight: '100vh',
-        overflowY: 'auto',
-      }}
-      
-    >
-      <TableContainer component={Paper} sx={{ maxHeight: 800, overflowY: 'auto', overflowX: 'auto' }}>
-        <Table aria-label="user data table">
+    <Paper elevation={3}sx={{
+      padding: "10px",
+      marginLeft:  '-220px',
+      maxHeight: '100vh',
+      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+      overflowY: 'auto'
+    }}>
+      <TableContainer component={Paper} >
+        <Table>
           <TableHead sx={{ backgroundColor: '#003399' }}>
             <TableRow>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nom</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Email</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {data
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>{row.username}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell align="center">
-                    <IconButton onClick={() => handleEdit(row.id)} sx={{ color: 'orange' }}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(row.id)} color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+            {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>{row.username}</TableCell>
+                <TableCell>{row.email}</TableCell>
+                <TableCell align="center">
+                  <IconButton onClick={() => handleEdit(row.id)} sx={{ color: 'orange' }}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={() => handleDelete(row.id)} color="error">
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
         <TablePagination
@@ -177,7 +192,7 @@ const SimpleTable = () => {
             boxShadow: 24,
           }}
         >
-          <Typography variant="h6">Edit User</Typography>
+          <Typography variant="h6">Modifier l'utilisateur</Typography>
           <TextField
             label="Nom"
             variant="outlined"
@@ -195,11 +210,11 @@ const SimpleTable = () => {
             onChange={(e) => setCurrentUser({ ...currentUser, email: e.target.value })}
           />
           <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-            <Button onClick={handleEditClose} color="secondary" variant="outlined">
-              Cancel
+            <Button onClick={handleEditClose} variant='contained' color='error'>
+              Annuler
             </Button>
-            <Button onClick={handleEditSave} color="primary" variant="contained">
-              Save
+            <Button onClick={handleEditSave} variant='contained' color='primary'>
+              Enregistrer
             </Button>
           </Box>
         </Box>
@@ -207,19 +222,34 @@ const SimpleTable = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteClose}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogTitle>
+          <WarningAmberIcon sx={{ color: 'red', marginRight: 1 }} />
+          Confirmer la suppression
+        </DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete this user?</Typography>
+          <Typography>Êtes-vous sûr de vouloir supprimer cet utilisateur ?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteClose} color="primary">
-            Cancel
+          <Button onClick={handleDeleteClose} variant='contained' color='primary'>
+            Annuler
           </Button>
-          <Button onClick={handleConfirmDelete} color="error">
-            Delete
+          <Button onClick={handleConfirmDelete} variant='contained' color='error'>
+            Supprimer
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={handleSnackbarClose} variant="filled" severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 };

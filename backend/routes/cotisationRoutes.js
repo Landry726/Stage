@@ -8,5 +8,6 @@ router.put('/:id',cotisationController.updateCotisation);
 router.delete('/:id',cotisationController.deleteCotisation);
 router.get('/:id' , cotisationController.getCotisationById);
 router.get('/membres/:membreId/mois', cotisationController.getCotisationsByMember);
+router.get('/cotisations/year/:year', cotisationController.getCotisationsByYear);
 
-module.exports = router;
+module.exports = router;    

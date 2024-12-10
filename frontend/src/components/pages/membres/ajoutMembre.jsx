@@ -9,10 +9,10 @@ import {
     Container,
     Paper,
     Box,
+    Alert,
 } from '@mui/material';
-import { Person, Work, Email } from '@mui/icons-material';
+import { Person, Work, Email, ArrowBack, Save } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { ArrowBack, Save } from '@mui/icons-material'; // Importez useNavigate
 
 const AjoutMembre = () => {
     const [newMember, setNewMember] = useState({ nom: '', poste: '', email: '' });
@@ -20,7 +20,7 @@ const AjoutMembre = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const [errors, setErrors] = useState({ nom: '', poste: '', email: '' });
-    const navigate = useNavigate(); // Initialisez useNavigate
+    const navigate = useNavigate();
 
     const validateForm = () => {
         let tempErrors = { nom: '', poste: '', email: '' };
@@ -64,27 +64,30 @@ const AjoutMembre = () => {
             setSnackbarMessage('Membre ajouté avec succès.');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);
+
             // Réinitialiser le formulaire
             setNewMember({ nom: '', poste: '', email: '' });
             setErrors({ nom: '', poste: '', email: '' });
-            
+
             // Rediriger vers la liste des membres après un ajout réussi
             setTimeout(() => {
-                navigate('/membres'); // Remplacez '/membres' par le chemin correct de votre liste de membres
-            }, 1000); // Attendre 1 seconde avant de rediriger
+                navigate('/membres');
+            }, 1000);
         } catch (error) {
-            setSnackbarMessage('Erreur lors de l\'ajout : ' + error.message);
+            setSnackbarMessage(`Erreur lors de l'ajout : ${error.message}`);
             setSnackbarSeverity('error');
             setSnackbarOpen(true);
         }
     };
+
     const handleCancel = () => {
-        navigate('/membres'); // Retourner à la liste des cotisations
+        navigate('/membres');
     };
 
     return (
-        <Container maxWidth="md" sx={{ paddingTop: 4  }}>
-            <Box  elevation={3}
+        <Container maxWidth="md" sx={{ paddingTop: 4 }}>
+            <Box
+                elevation={3}
                 sx={{
                     maxWidth: 800,
                     margin: '30px',
@@ -92,15 +95,16 @@ const AjoutMembre = () => {
                     boxShadow: 5,
                     borderRadius: 2,
                     bgcolor: 'background.paper',
-                  }}>
-                  <Box display="flex" alignItems="center" mb={3}>
-          <IconButton onClick={() => navigate('/listePaimentMission')} sx={{ mr: 1 ,color: 'primary.main'}}>
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h5" component="h1">
-            Ajouter Membre
-          </Typography>
-        </Box>
+                }}
+            >
+                <Box display="flex" alignItems="center" mb={3}>
+                    <IconButton onClick={handleCancel} sx={{ mr: 1, color: 'primary.main' }}>
+                        <ArrowBack />
+                    </IconButton>
+                    <Typography variant="h5" component="h1">
+                        Ajouter Membre
+                    </Typography>
+                </Box>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
                         <TextField
@@ -119,7 +123,6 @@ const AjoutMembre = () => {
                                 ),
                             }}
                             variant="outlined"
-                           
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -139,8 +142,7 @@ const AjoutMembre = () => {
                                 ),
                             }}
                             variant="outlined"
-                            size="medium" // Agrandit le champ de texte
-                           
+                            size="medium"
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -163,25 +165,27 @@ const AjoutMembre = () => {
                             sx={{ mb: 3 }}
                         />
                     </Grid>
-
-                        <Button 
-                        variant="contained" 
-                        color="primary" 
-                        onClick={handleAddMember}
-                        fullWidth  >
-                            Ajouter
-                        </Button>
+                    <Button variant="contained" color="primary" onClick={handleAddMember} fullWidth>
+                        Ajouter
+                    </Button>
                 </Grid>
             </Box>
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}
                 onClose={() => setSnackbarOpen(false)}
-                message={snackbarMessage}
-                severity={snackbarSeverity}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                sx={{ backgroundColor: snackbarSeverity === 'success' ? 'green' : 'red' }} // Changez la couleur ici
-            />
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={() => setSnackbarOpen(false)}
+                    severity={snackbarSeverity}
+                    sx={{ width: '100%' }}
+                      variant='filled'
+
+                >
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };

@@ -9,17 +9,17 @@ import {
     InputAdornment,
     Paper,
     IconButton,
-    Box
+    Box,
+    Snackbar,
+    Alert
 } from '@mui/material';
-import { 
-    AccountCircle, 
-    MonetizationOn, 
-    CalendarToday, 
-    ArrowBack 
+import {
+    AccountCircle,
+    MonetizationOn,
+    CalendarToday,
+    ArrowBack
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 function CotisationForm() {
     const [membreId, setMembreId] = useState('');
@@ -29,6 +29,9 @@ function CotisationForm() {
     const [status, setStatus] = useState('');
     const [membres, setMembres] = useState([]);
     const [errors, setErrors] = useState({});
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const navigate = useNavigate();
 
     // Récupérer la liste des membres
@@ -39,7 +42,7 @@ function CotisationForm() {
                 const data = await response.json();
                 setMembres(data);
             } catch (error) {
-                toast.error('Erreur lors de la récupération des membres');
+                showSnackbar('Erreur lors de la récupération des membres', 'error');
             }
         };
         fetchMembres();
@@ -81,7 +84,7 @@ function CotisationForm() {
                 throw new Error(errorData.message || 'Erreur lors de l’ajout de la cotisation');
             }
 
-            toast.success('Cotisation ajoutée avec succès !');
+            showSnackbar('Cotisation ajoutée avec succès !', 'success');
             setMembreId('');
             setMontant('');
             setMois('');
@@ -92,8 +95,18 @@ function CotisationForm() {
                 navigate('/cotisation');
             }, 2000);
         } catch (error) {
-            toast.error(error.message);
+            showSnackbar(error.message, 'error');
         }
+    };
+
+    const showSnackbar = (message, severity) => {
+        setSnackbarMessage(message);
+        setSnackbarSeverity(severity);
+        setSnackbarOpen(true);
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbarOpen(false);
     };
 
     return (
@@ -110,11 +123,11 @@ function CotisationForm() {
                 }}
             >
                 <Box display="flex" alignItems="center" mb={3}>
-                    <IconButton onClick={() => navigate('/cotisation')} sx={{ mr: 1 ,color: 'primary.main'}}>
-                    <ArrowBack />
+                    <IconButton onClick={() => navigate('/cotisation')} sx={{ mr: 1, color: 'primary.main' }}>
+                        <ArrowBack />
                     </IconButton>
                     <Typography variant="h5" component="h1">
-                    Paiement Cotisation
+                        Paiement Cotisation
                     </Typography>
                 </Box>
                 <form onSubmit={handleSubmit}>
@@ -243,8 +256,17 @@ function CotisationForm() {
                         </Grid>
                     </Grid>
                 </form>
-                <ToastContainer />
             </Paper>
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={4000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}variant='filled'>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 }

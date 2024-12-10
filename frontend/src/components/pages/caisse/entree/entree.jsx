@@ -161,7 +161,7 @@ const SoldeEntreeList = () => {
                 <TableRow key={entree._id}>
                   <TableCell align="center">{new Date(entree.date).toLocaleDateString()}</TableCell>
                   <TableCell align="center">{entree.motif}</TableCell>
-                  <TableCell align="center">{entree.montant}</TableCell>
+                  <TableCell align="center">{entree.montant}Ar</TableCell>
                   <TableCell align="center">Caisse {entree.caisseId}</TableCell>
                   <TableCell align="center">
                     <IconButton sx={{ color: 'orange' }} onClick={() => handleUpdate(entree)}>

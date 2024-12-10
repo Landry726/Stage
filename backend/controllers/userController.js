@@ -6,6 +6,7 @@ exports.getUserProfile = async (req, res) => {
     try {
         const user = await prisma.user.findMany({
             select: {
+                id : true,
                 email: true,
                 username: true,
             },
@@ -22,33 +23,29 @@ exports.getUserProfile = async (req, res) => {
 };
 
 // Mettre à jour le profil utilisateur
-
-
-
 exports.updateUser = async (req, res) => {
-    const { id } = req.params; // Récupérer l'ID de l'utilisateur depuis les paramètres de la requête
-    const { username, email } = req.body; // Récupérer les champs à mettre à jour depuis le corps de la requête
+    const { id } = req.params; 
+    const { username, email } = req.body;
 
-    // Validation des données reçues
-    if (username || email) {
+    // Vérifie si l'un des champs obligatoires est manquant
+    if (!username || !email) {
         return res.status(400).json({ message: "Nom d'utilisateur et email sont requis." });
     }
 
-    // Convertir l'ID en entier
     const userId = Number(id);
 
-    // Vérifiez si l'ID est un nombre valide
+    // Vérifie si l'ID est invalide
     if (isNaN(userId)) {
         return res.status(400).json({ message: "ID invalide." });
     }
 
     try {
-        // Utilisez `prisma.user.update` pour effectuer la mise à jour
+        // Mise à jour de l'utilisateur
         const updatedUser = await prisma.user.update({
-            where: { id: userId }, // Utiliser l'ID converti
+            where: { id: userId },
             data: {
-                username, // Nouveau nom d'utilisateur
-                email,    // Nouvel email
+                username,
+                email,   
             },
         });
 
@@ -58,7 +55,7 @@ exports.updateUser = async (req, res) => {
         });
     } catch (error) {
         if (error.code === 'P2025') {
-            // Erreur de non-existence de l'utilisateur
+            // Erreur lorsque l'utilisateur n'est pas trouvé
             return res.status(404).json({ message: "Utilisateur non trouvé." });
         }
         
@@ -66,8 +63,6 @@ exports.updateUser = async (req, res) => {
         res.status(500).json({ message: "Erreur de serveur lors de la mise à jour de l'utilisateur", error: error.message });
     }
 };
-
-
 
 
   

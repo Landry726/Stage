@@ -146,7 +146,7 @@ const SortieList = () => {
                 <TableRow key={sortie.id}>
                   <TableCell align="center">   {new Date(sortie.date).toLocaleDateString()} </TableCell>
                   <TableCell align="center">{sortie.motif}</TableCell>
-                  <TableCell align="center">{sortie.montant}</TableCell>
+                  <TableCell align="center">{sortie.montant} Ar</TableCell>
                   <TableCell align="center">Caisse {sortie.caisseId}</TableCell>
                   <TableCell align="center">
                     <IconButton

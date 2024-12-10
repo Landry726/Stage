@@ -1,36 +1,32 @@
-// frontend/src/components/Login.js
 import React, { useState } from 'react';
-import { TextField, Button, Container, Typography, Snackbar, IconButton, Grid, Alert } from '@mui/material';
+import { TextField, Button, Container, Typography, IconButton, Grid, Snackbar, Alert } from '@mui/material';
 import { Email, Lock, Visibility, VisibilityOff } from '@mui/icons-material';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import logo from '../../assets/images/téléchargement.jpg'; // Ajustez le chemin si nécessaire
+import { useNavigate, Link } from 'react-router-dom';
+import logo from '../../assets/images/téléchargement.jpg';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [succes, setSucces] = useState(false);
-  const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    // Réinitialiser les erreurs
     setEmailError('');
     setPasswordError('');
-    setError('');
 
-    // Validation des champs vides
     if (!email) {
-      setEmailError('L\'email est requis.');
+      setEmailError("L'email est requis.");
     }
     if (!password) {
       setPasswordError('Le mot de passe est requis.');
     }
-    if (!email || !password) return; // Empêche la suite si un champ est vide
+    if (!email || !password) return;
 
     try {
       const response = await axios.post('http://localhost:3000/api/auth/login', {
@@ -39,26 +35,28 @@ const Login = () => {
       });
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userId', response.data.userId);
-      setSucces(true);
+
+      setSnackbarMessage('Connexion réussie');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+
       setTimeout(() => {
         navigate('/dashboard');
       }, 2000);
     } catch (err) {
-      // Vérifier l'erreur et afficher un message approprié
-      if (err.response?.status === 401) {
-        setError('Email ou mot de passe incorrect.'); // Afficher une erreur si les identifiants sont incorrects
-      } else {
-        setError(err.response?.data?.message || 'Erreur lors de la connexion.'); // Autres erreurs
-      }
+      const errorMessage =
+        err.response?.status === 401
+          ? 'Email ou mot de passe incorrect.'
+          : 'Erreur lors de la connexion.';
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     }
   };
 
-  const handleClose = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setSucces(false);
-    setError('');
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setSnackbarOpen(false);
   };
 
   const handleClickShowPassword = () => {
@@ -66,14 +64,14 @@ const Login = () => {
   };
 
   return (
-    <Container 
-      maxWidth="xs" 
-      style={{ 
-        marginLeft: '530px', 
-        marginTop: '90px', 
-        padding: '30px', 
-        borderRadius: '10px ', 
-        boxShadow: '0 4px 20px rgba(0,0,0,0.2)', 
+    <Container
+      maxWidth="xs"
+      style={{
+        marginLeft: '530px',
+        marginTop: '90px',
+        padding: '30px',
+        borderRadius: '10px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -81,29 +79,6 @@ const Login = () => {
         height: '60vh',
       }}
     >
-      {/* Snackbar pour afficher les messages de succès ou d'erreur */}
-      <Snackbar
-        open={succes}
-        autoHideDuration={3000}
-        onClose={handleClose}
-      >
-        <Alert severity='success' onClose={handleClose}>
-          Connexion réussie
-        </Alert>
-      </Snackbar>
-
-      {error && (
-        <Snackbar
-          open={true} 
-          autoHideDuration={3000}
-          onClose={handleClose}
-        >
-          <Alert severity='error' onClose={handleClose}>
-            {error}
-          </Alert>
-        </Snackbar>
-      )}
-
       <Grid container direction="column" alignItems="center">
         <img src={logo} alt="Logo" style={{ width: '100px' }} />
         <Typography variant="h4" component="h1" gutterBottom style={{ color: 'black' }}>
@@ -116,10 +91,10 @@ const Login = () => {
           margin="normal"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          error={!!emailError || !!error} // Afficher l'erreur si présente
-          helperText={emailError || (error && 'Email ou mot de passe incorrect.')} // Texte d'aide pour l'erreur
+          error={!!emailError}
+          helperText={emailError}
           InputProps={{
-            startAdornment: <Email position="start" />, // Icône d'email
+            startAdornment: <Email position="start" />,
           }}
         />
         <TextField
@@ -130,10 +105,10 @@ const Login = () => {
           margin="normal"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          error={!!passwordError || !!error} // Afficher l'erreur si présente
-          helperText={passwordError || (error && 'Email ou mot de passe incorrect.')} // Texte d'aide pour l'erreur
+          error={!!passwordError}
+          helperText={passwordError}
           InputProps={{
-            startAdornment: <Lock position="start" />, // Icône de verrou
+            startAdornment: <Lock position="start" />,
             endAdornment: (
               <IconButton onClick={handleClickShowPassword} edge="end">
                 {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -141,26 +116,43 @@ const Login = () => {
             ),
           }}
         />
-        <Button 
-          variant="contained" 
-          style={{ 
-            backgroundColor: '#ffd700', // Couleur jaune adoucie
-            color: '#000', // Couleur du texte
+        <Button
+          variant="contained"
+          style={{
+            backgroundColor: '#ffc107',
+            color: '#000',
             marginTop: '20px',
             borderRadius: '10px',
-            borderColor: 'fcfc03',
-          }} 
-          fullWidth 
+            padding: '10px 20px',
+            fontSize: '16px',
+            transition: 'background-color 0.3s, transform 0.2s',
+          }}
+          fullWidth
+          onMouseOver={(e) => (e.target.style.backgroundColor = '#ffb300')}
+          onMouseOut={(e) => (e.target.style.backgroundColor = '#ffc107')}
           onClick={handleLogin}
         >
           Se connecter
         </Button>
 
-        {/* Lien vers la page d'enregistrement avec texte alternatif */}
         <Typography variant="body2" style={{ marginTop: '20px', color: 'black' }}>
-          Vous n'avez pas encore de compte ? <Link to="/register" style={{ textDecoration: 'none', color: '#0F09C8' }}>Créez-en un ici</Link>
+          Vous n'avez pas encore de compte ?{' '}
+          <Link to="/register" style={{ textDecoration: 'none', color: '#0F09C8' }}>
+            Créez-en un ici
+          </Link>
         </Typography>
       </Grid>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} variant="filled">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

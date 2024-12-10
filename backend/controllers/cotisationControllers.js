@@ -221,5 +221,36 @@ exports.getCotisationsByMember = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur lors de la récupération des cotisations.' });
   }
 };
+exports.getCotisationsByYear = async (req, res) => {
+  const { year } = req.params; // Paramètre de l'année
 
+  try {
+    const cotisations = await prisma.cotisation.findMany({
+      where: {
+        datePaiement: {
+          gte: new Date(`${year}-01-01`),
+          lte: new Date(`${year}-12-31`)
+        }
+      },
+      include: {
+        membre: true
+      }
+    });
+
+    const cotisationsByMonth = Array(12).fill(0); // Tableau pour stocker le nombre de paiements par mois
+
+    // Remplir le tableau avec les montants des cotisations par mois
+    cotisations.forEach((cotisation) => {
+      const month = new Date(cotisation.datePaiement).getMonth(); // Obtient le mois (0-11)
+      cotisationsByMonth[month]++;
+    });
+
+    res.json({
+      year,
+      cotisationsByMonth, // Tableau des cotisations par mois
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des cotisations par année' });
+  }
+};
 
