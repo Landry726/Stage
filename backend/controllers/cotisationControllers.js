@@ -2,18 +2,19 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { format } = require('date-fns'); // Assurez-vous d'importer 'format' depuis 'date-fns'
 const { fr } = require('date-fns/locale'); // Importer la locale française
-
+ 
+//Afficher les cotisations
 exports.getCotisations = async (req, res) => {
   try {
     const cotisations = await prisma.cotisation.findMany({
       include: { membre: true },
     });
 
-    // Ajout du champ 'status' basé sur le montant
+  
     const cotisationsWithStatus = cotisations.map((cotisation) => {
       let status = 'Non Payé';  // Valeur par défaut
 
-      // Vérification du montant
+     
       if (cotisation.montant === null) {
         status = 'Non Payé';
       } else if (cotisation.montant < 3000) {
@@ -22,12 +23,10 @@ exports.getCotisations = async (req, res) => {
         status = 'Payé';
       }
 
-      // Formater la date de paiement
+     
       const formattedDate = cotisation.datePaiement ? format(new Date(cotisation.datePaiement), 'dd/MM/yyyy') : null;
 
-      // Extraire et formater le mois en français
-      // const moisText = cotisation.datePaiement ? format(new Date(cotisation.datePaiement), 'MMMM', { locale: fr }) : null; // Mois en texte (Janvier, Février, etc.)
-
+  
       return { ...cotisation, status, datePaiement: formattedDate };  // Ajoute le mois en français
     });
 
@@ -38,14 +37,13 @@ exports.getCotisations = async (req, res) => {
 };
 
   
-// POST: Créer une nouvelle cotisation
+//Ajouter une cotisation
 exports.createCotisation = async (req, res) => {
   const { membreId, montant, mois, datePaiement } = req.body;
 
   try {
-    const formattedDate = new Date(datePaiement); // Convertir la date en format Date si nécessaire
-
-    // Vérifier si une cotisation existe déjà pour ce membre et ce mois
+    const formattedDate = new Date(datePaiement);
+    
     const existingCotisation = await prisma.cotisation.findFirst({
       where: {
         membreId,
@@ -53,14 +51,20 @@ exports.createCotisation = async (req, res) => {
       },
     });
 
+    if (montant > 3000) {
+      return res.status(400).json({
+        message: `Le montant de la cotisation ne doit pas dépasser 3000. Vous avez saisi ${montant}. Veuillez corriger.`,
+      });
+    }
+
     if (existingCotisation) {
       return res.status(400).json({
         message: `Le membre a déjà payé pour le mois de ${mois}. Veuillez vérifier les informations.`,
       });
     }
 
-    // Déterminer le statut en fonction du montant
-    let status = 'Non Payé'; // Statut par défaut
+    
+    let status = 'Non Payé'; 
 
     if (montant === null || montant === 0) {
       status = 'Non Payé';
@@ -70,14 +74,14 @@ exports.createCotisation = async (req, res) => {
       status = 'Payé';
     }
 
-    // Créer la cotisation avec le statut calculé
+    
     const newCotisation = await prisma.cotisation.create({
       data: {
         membreId,
         datePaiement: formattedDate,
         montant,
         mois,
-        status, // Statut déterminé en fonction du montant
+        status, 
       },
     });
 
@@ -92,45 +96,49 @@ exports.createCotisation = async (req, res) => {
 };
 
 
-
-// PUT: Mettre à jour une cotisation
+// Mettre à jour une cotisation
 exports.updateCotisation = async (req, res) => {
   const { id } = req.params;
   const { montant, mois, datePaiement, membreId } = req.body;
 
   try {
-    // Vérification des valeurs avant de procéder à la mise à jour
+    // Validation des champs
     if (!montant || !mois || !datePaiement || !membreId) {
       return res.status(400).json({ error: "Tous les champs sont requis" });
     }
 
-    // Validation de la date
+    // Conversion de montant en Float
+    const montantFloat = parseFloat(montant);
+    if (isNaN(montantFloat)) {
+      return res.status(400).json({ error: "Le montant doit être un nombre valide" });
+    }
+
+    // Validation et conversion de la date
     const formattedDate = new Date(datePaiement);
     if (isNaN(formattedDate)) {
       return res.status(400).json({ error: "La date de paiement est invalide" });
     }
 
-    // Calcul du statut
-    let status = 'Non Payé'; // Valeur par défaut
-    if (montant && montant >= 3000) {
+    // Détermination du statut
+    let status = 'Non Payé'; 
+    if (montantFloat >= 3000) {
       status = 'Payé';
-    } else if (montant && montant < 3000) {
+    } else if (montantFloat < 3000) {
       status = 'Insuffisant';
     }
 
-    // Mise à jour de la cotisation avec les données valides
+    // Mise à jour de la cotisation dans Prisma
     const updatedCotisation = await prisma.cotisation.update({
       where: { id: Number(id) },
       data: {
-        montant,
+        montant: montantFloat,
         mois,
         datePaiement: formattedDate,
         status,
-        membreId,
+        membreId: Number(membreId), // Assurez-vous que membreId est bien un entier
       },
     });
 
-    // Retourner la cotisation mise à jour
     res.json(updatedCotisation);
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la cotisation:', error);
@@ -140,7 +148,8 @@ exports.updateCotisation = async (req, res) => {
 
 
 
-// DELETE: Supprimer une cotisation
+
+// Supprimer une cotisation
 exports.deleteCotisation = async (req, res) => {
   const { id } = req.params;
   try {
@@ -237,20 +246,45 @@ exports.getCotisationsByYear = async (req, res) => {
       }
     });
 
-    const cotisationsByMonth = Array(12).fill(0); // Tableau pour stocker le nombre de paiements par mois
+    // Initialiser un tableau avec 12 cases pour représenter les mois (valeurs initiales à 0)
+    const cotisationsByMonth = Array(12).fill(0); // Chaque case représente le nombre de cotisations pour un mois
 
-    // Remplir le tableau avec les montants des cotisations par mois
+    // Parcourir les cotisations et incrémenter le compteur du mois correspondant
     cotisations.forEach((cotisation) => {
-      const month = new Date(cotisation.datePaiement).getMonth(); // Obtient le mois (0-11)
+      const month = new Date(cotisation.datePaiement).getMonth(); // Mois (0 = Janvier, 11 = Décembre)
       cotisationsByMonth[month]++;
     });
 
     res.json({
       year,
-      cotisationsByMonth, // Tableau des cotisations par mois
+      cotisationsByMonth // Résultat : tableau avec le nombre de cotisations par mois
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Erreur lors de la récupération des cotisations par année' });
+  }
+};
+exports.getMembresSansCotisation = async (req, res) => {
+  try {
+    // Récupérer les membres sans cotisation
+    const membresSansCotisation = await prisma.membre.findMany({
+      where: {
+        cotisations: {
+          none: {}, // Aucune cotisation liée
+        },
+      },
+      select: {
+        id: true,
+        nom: true,
+        poste : true,
+      },
+    });
+
+    // Envoyer la réponse
+    res.status(200).json(membresSansCotisation);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des membres sans cotisation :', error);
+    res.status(500).json({ error: 'Une erreur est survenue.' });
   }
 };
 

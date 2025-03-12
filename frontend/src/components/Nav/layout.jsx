@@ -52,7 +52,7 @@ const Layout = ({ children }) => {
   };
 
   const handleProfileMenuClose = () => {
-    setAnchorEl(null);
+    window.location.href = '/users';
   };
 
   const handleLogoutClick = () => {
@@ -84,19 +84,19 @@ const Layout = ({ children }) => {
       <CssBaseline />
       <AppBar
         style={{ 
-          background: '#FFD700', // Jaune vif
+          background: '#FFD700',
           boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
         }}
         position="fixed"
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
           '& .MuiToolbar-root': {
-            color: '#000' // Texte en noir pour contraster avec le jaune
+            color: '#000' 
           }
         }}
       >
         <Toolbar>
-          <IconButton 
+          {/* <IconButton 
             edge="start" 
             color="inherit" 
             aria-label="menu" 
@@ -110,14 +110,14 @@ const Layout = ({ children }) => {
             }}
           >
             <MenuIcon />
-          </IconButton>
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, ml: 4 }}>
+          </IconButton> */}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, ml: 1 }}>
             <img 
               src={userLogo} 
               alt="User Logo" 
               style={{ 
-                width: 150, 
-                marginRight: 50, 
+                width: 180, 
+                marginRight: 10, 
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' 
               }} 
             />
@@ -191,16 +191,16 @@ const Layout = ({ children }) => {
                 to={item.route}
                 sx={{
                   borderRadius: 2,
-                  margin: '0px -3px', // Augmenté l'espace vertical
+                  margin: '0px -4px', 
                   transition: 'background-color 0.3s, transform 0.2s',
                   '&:hover': {
                     backgroundColor: 'rgba(255,255,255,0.1)',
                     transform: 'scale(1.02)',
                   },
-                  padding: open ? '15px 20px' : '0px', // Plus d'espace de padding
+                  padding: open ? '15px 20px' : '15px', 
                   '& .MuiSvgIcon-root': {
                     color: 'white',
-                    marginRight: open ? 1 : 0, // Plus d'espace entre l'icône et le texte
+                    marginRight: open ? 2 : 0, 
                     transition: 'transform 0.2s'
                   },
                   '&:hover .MuiSvgIcon-root': {
@@ -215,7 +215,7 @@ const Layout = ({ children }) => {
                     letterSpacing: '0.5px',
                     opacity: open ? 1 : 0,
                     transition: 'opacity 0.3s',
-                    paddingLeft: 1 // Espace supplémentaire à gauche du texte
+                    paddingLeft: 1 
                   },
                 }}
               >
@@ -242,9 +242,9 @@ const Layout = ({ children }) => {
       <Box
         component="main"
         sx={{
-          flexGrow: 1,
+          flexGrow:2,
           bgcolor: '#f4f6f9',
-          p: 3,
+          p:2,
           marginLeft: open ? `${drawerWidthOpen}px` : `${drawerWidthClosed}px`,
           transition: 'margin 0.3s ease',
         }}

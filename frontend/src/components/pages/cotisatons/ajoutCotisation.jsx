@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
+    Autocomplete,
     TextField,
     Button,
-    MenuItem,
     Typography,
     Container,
     Grid,
@@ -11,22 +11,21 @@ import {
     IconButton,
     Box,
     Snackbar,
-    Alert
+    Alert,
+    MenuItem
 } from '@mui/material';
 import {
-    AccountCircle,
     MonetizationOn,
     CalendarToday,
-    ArrowBack
+    ArrowBack,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
 function CotisationForm() {
-    const [membreId, setMembreId] = useState('');
+    const [membreId, setMembreId] = useState(null);
     const [montant, setMontant] = useState('');
     const [mois, setMois] = useState('');
     const [datePaiement, setDatePaiement] = useState('');
-    const [status, setStatus] = useState('');
     const [membres, setMembres] = useState([]);
     const [errors, setErrors] = useState({});
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -34,7 +33,7 @@ function CotisationForm() {
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
     const navigate = useNavigate();
 
-    // Récupérer la liste des membres
+    // Fetch membres
     useEffect(() => {
         const fetchMembres = async () => {
             try {
@@ -63,11 +62,10 @@ function CotisationForm() {
         if (!validateForm()) return;
 
         const data = {
-            membreId: parseInt(membreId),
+            membreId: membreId?.id,
             montant: parseFloat(montant),
             mois,
             datePaiement,
-            status,
         };
 
         try {
@@ -85,11 +83,10 @@ function CotisationForm() {
             }
 
             showSnackbar('Cotisation ajoutée avec succès !', 'success');
-            setMembreId('');
+            setMembreId(null);
             setMontant('');
             setMois('');
             setDatePaiement('');
-            setStatus('');
 
             setTimeout(() => {
                 navigate('/cotisation');
@@ -133,36 +130,34 @@ function CotisationForm() {
                 <form onSubmit={handleSubmit}>
                     <Grid container spacing={3}>
                         <Grid item xs={12}>
-                            <TextField
-                                select
-                                label="Membre"
+                            <Autocomplete
+                                options={membres}
+                                getOptionLabel={(option) => option.nom || ''}
                                 value={membreId}
-                                onChange={(e) => setMembreId(e.target.value)}
-                                fullWidth
-                                required
-                                error={!!errors.membreId}
-                                helperText={errors.membreId}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <AccountCircle />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{
-                                    backgroundColor: 'white',
-                                    borderRadius: 2,
-                                }}
-                            >
-                                <MenuItem value="">
-                                    <em>Sélectionnez un membre</em>
-                                </MenuItem>
-                                {membres.map((membre) => (
-                                    <MenuItem key={membre.id} value={membre.id}>
-                                        {membre.nom}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                                onChange={(event, newValue) => setMembreId(newValue)}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Membre"
+                                        placeholder="Membre"
+                                        required
+                                        error={!!errors.membreId}
+                                        helperText={errors.membreId}
+                                        InputProps={{
+                                            ...params.InputProps,
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    {params.InputProps.startAdornment}
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                        sx={{
+                                            backgroundColor: 'white',
+                                            borderRadius: 2,
+                                        }}
+                                    />
+                                )}
+                            />
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
@@ -199,7 +194,7 @@ function CotisationForm() {
                                 helperText={errors.mois}
                                 sx={{
                                     backgroundColor: 'white',
-                                    borderRadius: 2,
+                                    borderRadius: 3,
                                 }}
                             >
                                 <MenuItem value="">
@@ -263,7 +258,7 @@ function CotisationForm() {
                 onClose={handleCloseSnackbar}
                 anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
-                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}variant='filled'>
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }} variant="filled">
                     {snackbarMessage}
                 </Alert>
             </Snackbar>

@@ -9,5 +9,6 @@ router.delete('/:id',cotisationController.deleteCotisation);
 router.get('/:id' , cotisationController.getCotisationById);
 router.get('/membres/:membreId/mois', cotisationController.getCotisationsByMember);
 router.get('/cotisations/year/:year', cotisationController.getCotisationsByYear);
+router.get('/membres/sans-cotisation', cotisationController.getMembresSansCotisation);
 
 module.exports = router;    

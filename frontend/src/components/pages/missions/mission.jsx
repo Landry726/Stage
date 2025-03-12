@@ -14,13 +14,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  DialogContentText,
   TextField,
   Snackbar,
   IconButton,
   Typography,
   TablePagination,
   MenuItem,  // Import MenuItem pour chaque mois
+  createTheme
+
 } from '@mui/material';
+import { frFR } from "@mui/material/locale";
+import { ThemeProvider } from "@mui/material/styles";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Add as AddIcon, List as ListIcon } from '@mui/icons-material';
 import AddCardIcon from '@mui/icons-material/AddCard';
@@ -131,9 +136,34 @@ const MissionList = () => {
   const months = [
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
   ];
-
+ // Création d'un thème personnalisé en français
+ const theme = createTheme(
+  {
+    palette: {
+      primary: {
+        main: "#003399",
+      },
+    },
+  },
+  frFR // Localisation en français
+);
   return (
-    <Paper elevation={3} sx={{ padding: "15px", marginLeft: '-220px', maxHeight: '100vh', overflowY: 'auto' }}>
+    <ThemeProvider theme={theme}>
+    <Paper elevation={3} sx={{
+       padding: "15px",
+       marginLeft: '-220px',
+       maxHeight: '100vh',
+     overflowY: 'auto' }}>
+      <Typography
+                variant="h5"
+                sx={{
+                    fontWeight: 'bold',
+                    color: '#003399', 
+                    margin: '20px 0',
+                }}
+                >
+                 Mission
+                </Typography>
       <Link to="/ajoutMission">
         <Button variant="contained" color="primary" style={{ marginRight: 30 , marginBottom : 20 }} startIcon={<AddIcon />}>
           Ajouter une Mission
@@ -208,12 +238,14 @@ const MissionList = () => {
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage = "Ligne par page "
       />
 
       {/* Dialog pour modifier une mission */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Modifier la Mission</DialogTitle>
         <DialogContent>
+        <DialogContentText  sx={{ marginBottom: 2 }} >Modifiez les informations du mission :</DialogContentText>
           {editMission && (
             <>
               <TextField
@@ -283,6 +315,7 @@ const MissionList = () => {
       </Alert>
     </Snackbar>
     </Paper>
+    </ThemeProvider>
   );
 };
 

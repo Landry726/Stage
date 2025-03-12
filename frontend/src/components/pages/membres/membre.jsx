@@ -23,7 +23,11 @@ import {
     Alert,
     useMediaQuery,
     useTheme,
+  createTheme
+
 } from '@mui/material';
+import { frFR } from "@mui/material/locale";
+import { ThemeProvider } from "@mui/material/styles";
 import { Link } from "react-router-dom";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -182,15 +186,36 @@ const MembersTable = () => {
         { id: 'email', label: 'Email', show: !isMediumScreen },
         { id: 'actions', label: 'Actions', show: true },
     ];
-
+// Création d'un thème personnalisé en français
+const theme1 = createTheme(
+    {
+      palette: {
+        primary: {
+          main: "#003399",
+        },
+      },
+    },
+    frFR // Localisation en français
+  );
     return (
+        <ThemeProvider theme={theme1}>
         <Paper elevation={3}sx={{
             padding: "10px",
-            marginLeft:  '-220px',
+            marginLeft:  '-230px',
             maxHeight: '100vh',
             boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
             overflowY: 'auto'
           }}>
+            <Typography
+                variant="h5"
+                sx={{
+                    fontWeight: 'bold',
+                    color: '#003399', 
+                    margin: '5px 0',
+                }}
+                >
+                 Membre
+                </Typography>
             <Link to="/ajoutMembre" style={{ textDecoration: 'none' }}>
                 <Button variant="contained" color="primary" startIcon={<AddIcon />} sx={{ mb: 2 }}>
                     Ajouter membre
@@ -268,12 +293,13 @@ const MembersTable = () => {
                 page={page}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                labelRowsPerPage = "Ligne par page "
             />
 
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>Modifier Membre</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>Modifiez les informations du membre :</DialogContentText>
+                    <DialogContentText  sx={{ marginBottom: 2 }} >Modifiez les informations du membre :</DialogContentText>
                     <TextField
                         label="Nom"
                         fullWidth
@@ -281,7 +307,7 @@ const MembersTable = () => {
                         onChange={(e) =>
                             setCurrentMember({ ...currentMember, nom: e.target.value })
                         }
-                        sx={{ marginBottom: 2 }}
+                        sx={{ marginBottom: 5 }}
                     />
                     <TextField
                         label="Poste"
@@ -290,9 +316,19 @@ const MembersTable = () => {
                         onChange={(e) =>
                             setCurrentMember({ ...currentMember, poste: e.target.value })
                         }
+                        sx={{ marginBottom: 5 }}
+                    />
+                     <TextField
+                        label="Email"
+                        fullWidth
+                        value={currentMember ? currentMember.email : ''}
+                        onChange={(e) =>
+                            setCurrentMember({ ...currentMember, email: e.target.value })
+                        }
+             
                     />
                 </DialogContent>
-                <DialogActions>
+                <DialogActions  sx={{ marginBottom: 2 }}>
                     <Button onClick={handleClose} variant='contained' color='error'>
                         Annuler
                     </Button>
@@ -338,6 +374,7 @@ const MembersTable = () => {
                 </Alert>
             </Snackbar>
         </Paper>
+        </ThemeProvider>
     );
 };
 

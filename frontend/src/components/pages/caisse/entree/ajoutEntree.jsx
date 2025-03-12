@@ -1,36 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Typography, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Snackbar,
+  Alert,
+  IconButton,
+} from '@mui/material';
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
-
+import { ArrowBack } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 const AddEntryForm = () => {
   const [motif, setMotif] = useState('');
   const [montant, setMontant] = useState('');
   const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [caisseId, setCaisseId] = useState('');
-  const [caisses, setCaisses] = useState([]); // Stocke les caisses disponibles
-
+  const [caisses, setCaisses] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: '' });
+  const navigate = useNavigate();
   useEffect(() => {
-    // Charger les caisses au chargement du composant
     const fetchCaisses = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/caisse'); // Assurez-vous que cette route retourne toutes les caisses
-        setCaisses(response.data); // Met les caisses dans l'état
+        const response = await axios.get('http://localhost:3000/api/caisse');
+        setCaisses(response.data);
       } catch (error) {
-        toast.error("Erreur lors du chargement des caisses");
-        console.error(error);
+        handleSnackbar('Erreur lors du chargement des caisses', 'error');
       }
     };
-
     fetchCaisses();
   }, []);
+
+  const handleSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!motif || !montant || !date || !caisseId) {
-      toast.error("Tous les champs sont requis !");
+      handleSnackbar('Tous les champs sont requis !', 'warning');
       return;
     }
 
@@ -43,34 +61,39 @@ const AddEntryForm = () => {
       });
 
       if (response.status === 201) {
-        toast.success("Entrée ajoutée avec succès !");
+        handleSnackbar('Entrée ajoutée avec succès !', 'success');
         setMotif('');
         setMontant('');
         setDate(dayjs().format('YYYY-MM-DD'));
         setCaisseId('');
       }
+      setTimeout(() => {
+        navigate('/Entree');
+    }, 2000);
     } catch (error) {
-      toast.error("Erreur lors de l'ajout de l'entrée");
-      console.error(error);
+      handleSnackbar("Erreur lors de l'ajout de l'entrée", 'error');
     }
   };
+  const handleCancel = () => {
+    navigate('/Entree');
+};
 
   return (
     <Box
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: 3,
-        boxShadow: 3,
-        maxWidth: 400,
-        margin: '0 auto',
+        maxWidth: 800,
+        margin: '30px',
+        padding: 5,
+        boxShadow: 5,
         borderRadius: 2,
-        backgroundColor: '#f9f9f9',
-      }}
+        bgcolor: 'background.paper',
+    }}
     >
+      <IconButton onClick={handleCancel} sx={{ mr: 1, color: 'primary.main' }}>
+                        <ArrowBack />
+                    </IconButton>
       <Typography variant="h5" mb={2}>
         Ajouter une Entrée
       </Typography>
@@ -107,7 +130,6 @@ const AddEntryForm = () => {
         }}
       />
 
-      {/* Sélection de la caisse */}
       <FormControl fullWidth margin="normal">
         <InputLabel id="select-caisse-label">Caisse</InputLabel>
         <Select
@@ -118,7 +140,7 @@ const AddEntryForm = () => {
         >
           {caisses.map((caisse) => (
             <MenuItem key={caisse.id} value={caisse.id}>
-              {caisse.nom || `Caisse ${caisse.id}`} {/* Utilisez la propriété "nom" ou un autre identifiant */}
+              {caisse.nom || `Caisse ${caisse.id}`}
             </MenuItem>
           ))}
         </Select>
@@ -128,14 +150,22 @@ const AddEntryForm = () => {
         type="submit"
         variant="contained"
         color="primary"
-        sx={{
-          mt: 2,
-          backgroundColor: '#1976d2',
-          ':hover': { backgroundColor: '#115293' },
-        }}
+        sx={{ mt: 2, backgroundColor: '#1976d2', width : '100%',':hover': { backgroundColor: '#115293' } }}
       >
         Ajouter Entrée
       </Button>
+
+      {/* Snackbar pour les notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }} variant='filled'>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

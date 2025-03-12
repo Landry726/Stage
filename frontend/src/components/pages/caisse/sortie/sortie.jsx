@@ -18,31 +18,38 @@ import {
   DialogTitle,
   Button,
   DialogContentText,
+  createTheme,
+  Snackbar,
+  Alert
 } from "@mui/material";
+import { frFR } from "@mui/material/locale";
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { ThemeProvider } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Link } from "react-router-dom"; // Pour les liens de navigation
+import { Link } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
 const SortieList = () => {
-  const [sorties, setSorties] = useState([]); // Liste des sorties
-  const [search, setSearch] = useState(""); // Terme de recherche
-  const [page, setPage] = useState(0); // Page actuelle
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Nombre de lignes par page
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // État de la boîte de dialogue de suppression
-  const [openEditDialog, setOpenEditDialog] = useState(false); // État de la boîte de dialogue d'édition
-  const [selectedSortie, setSelectedSortie] = useState(null); // Sorte sélectionnée pour modification
+  const [sorties, setSorties] = useState([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [selectedSortie, setSelectedSortie] = useState(null);
+  
+  const [openSnackbar, setOpenSnackbar] = useState(false); // État pour la Snackbar
+  const [snackbarMessage, setSnackbarMessage] = useState(""); // Message de la Snackbar
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // Sévérité de la Snackbar
 
   // Charger les sorties depuis l'API
   const fetchSorties = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/sortie"); // Remplacez par votre URL API
+      const response = await axios.get("http://localhost:3000/api/sortie");
       setSorties(response.data);
     } catch (error) {
-      toast.error("Erreur lors du chargement des sorties");
       console.error(error);
     }
   };
@@ -54,12 +61,16 @@ const SortieList = () => {
   // Gestion de la suppression d'une sortie
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:3000/api/sorties/${selectedSortie.id}`); // Remplacez par votre URL API
-      toast.success("Sortie supprimée avec succès");
-      setSorties(sorties.filter((sortie) => sortie.id !== selectedSortie.id)); // Mise à jour de la liste
-      setOpenDeleteDialog(false); // Fermer la boîte de dialogue
+      await axios.delete(`http://localhost:3000/api/sortie/${selectedSortie.id}`);
+      setSnackbarMessage("Sortie supprimée avec succès");
+      setSnackbarSeverity("success");
+      setSorties(sorties.filter((sortie) => sortie.id !== selectedSortie.id));
+      setOpenDeleteDialog(false);
+      setOpenSnackbar(true);
     } catch (error) {
-      toast.error("Erreur lors de la suppression de la sortie");
+      setSnackbarMessage("Erreur lors de la suppression de la sortie");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
       console.error(error);
     }
   };
@@ -67,16 +78,20 @@ const SortieList = () => {
   // Gestion de la modification d'une sortie
   const handleEdit = async () => {
     try {
-      await axios.put(`http://localhost:3000/api/sorties/${selectedSortie.id}`, selectedSortie); // Remplacez par votre URL API
-      toast.success("Sortie modifiée avec succès");
+      await axios.put(`http://localhost:3000/api/sortie/${selectedSortie.id}`, selectedSortie);
+      setSnackbarMessage("Sortie modifiée avec succès");
+      setSnackbarSeverity("success");
       setSorties(
         sorties.map((sortie) =>
           sortie.id === selectedSortie.id ? selectedSortie : sortie
         )
-      ); // Mise à jour de la liste
-      setOpenEditDialog(false); // Fermer la boîte de dialogue
+      );
+      setOpenEditDialog(false);
+      setOpenSnackbar(true);
     } catch (error) {
-      toast.error("Erreur lors de la modification de la sortie");
+      setSnackbarMessage("Erreur lors de la modification de la sortie");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
       console.error(error);
     }
   };
@@ -99,155 +114,179 @@ const SortieList = () => {
       sortie.date.includes(search)
   );
 
+  // Création d'un thème personnalisé en français
+  const theme = createTheme(
+    {
+      palette: {
+        primary: {
+          main: "#003399",
+        },
+      },
+    },
+    frFR // Localisation en français
+  );
+
   return (
-    <Paper elevation={3}
-    sx={{
-      padding: "10px",
-      marginLeft:  '-220px',
-      maxHeight: '100vh',
-      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-      overflowY: 'auto'
-    }}>
-      {/* <Typography  variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#003399' }}>
-        Liste des Sorties
-      </Typography> */}
-      <Link to="/AjoutSortie">
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} sx={{ mb: 2 }}>
-          Ajouter une sortie
-        </Button>
-      </Link>
-      
-      {/* Champ de recherche */}
-      <TextField
-        label="Rechercher"
-        variant="outlined"
-        fullWidth
-        sx={{ mb: 2 }}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-        
-      {/* Table des sorties */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }} align="center">Date</TableCell>
-              <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }} align="center">Motif</TableCell>
-              <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }}  align="center">Montant</TableCell>
-              <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }} align="center">Caisse</TableCell>
-              <TableCell sx={{ color: 'white' , backgroundColor: '#003399' }} align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredSorties
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((sortie) => (
-                <TableRow key={sortie.id}>
-                  <TableCell align="center">   {new Date(sortie.date).toLocaleDateString()} </TableCell>
-                  <TableCell align="center">{sortie.motif}</TableCell>
-                  <TableCell align="center">{sortie.montant} Ar</TableCell>
-                  <TableCell align="center">Caisse {sortie.caisseId}</TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                     sx={{ color: 'orange' }}
-                      onClick={() => {
-                        setSelectedSortie(sortie);
-                        setOpenEditDialog(true);
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => {
-                        setSelectedSortie(sortie);
-                        setOpenDeleteDialog(true);
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Pagination */}
-      <TablePagination
-        component="div"
-        count={filteredSorties.length}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-      />
-
-      {/* Container pour les notifications */}
-      <ToastContainer />
-
-      {/* Dialog de confirmation pour suppression */}
-      <Dialog
-        open={openDeleteDialog}
-        onClose={() => setOpenDeleteDialog(false)}
-      >
-        <DialogTitle>Confirmer la suppression</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Êtes-vous sûr de vouloir supprimer cette sortie ?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)} color="primary">
-            Annuler
+    <ThemeProvider theme={theme}>
+      <Paper elevation={3}
+        sx={{
+          padding: "10px",
+          marginLeft: '-220px',
+          maxHeight: '100vh',
+          boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+          overflowY: 'auto'
+        }}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 'bold',
+            color: '#003399',
+            margin: '20px 0',
+          }}
+        >
+          Solde Sortie
+        </Typography>
+        <Link to="/AjoutSortie">
+          <Button variant="contained" color="primary" startIcon={<AddIcon />} sx={{ mb: 2 }}>
+            Ajouter une sortie
           </Button>
-          <Button onClick={handleDelete} color="error">
-            Supprimer
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Link>
 
-      {/* Dialog de modification */}
-      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
-        <DialogTitle>Modifier la Sortie</DialogTitle>
-        <DialogContent>
-          {/* Formulaire de modification */}
-          <TextField
-            label="Motif"
-            variant="outlined"
-            fullWidth
-            value={selectedSortie?.motif || ""}
-            onChange={(e) =>
-              setSelectedSortie({ ...selectedSortie, motif: e.target.value })
-            }
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Montant"
-            variant="outlined"
-            fullWidth
-            type="number"
-            value={selectedSortie?.montant || ""}
-            onChange={(e) =>
-              setSelectedSortie({
-                ...selectedSortie,
-                montant: parseFloat(e.target.value),
-              })
-            }
-            sx={{ mb: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditDialog(false)} color="primary">
-            Annuler
-          </Button>
-          <Button onClick={handleEdit} color="primary">
-            Sauvegarder
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+        <TextField
+          label="Rechercher"
+          variant="outlined"
+          fullWidth
+          sx={{ mb: 2 }}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ color: 'white', backgroundColor: '#003399' }} align="center">Date</TableCell>
+                <TableCell sx={{ color: 'white', backgroundColor: '#003399' }} align="center">Motif</TableCell>
+                <TableCell sx={{ color: 'white', backgroundColor: '#003399' }} align="center">Montant</TableCell>
+                <TableCell sx={{ color: 'white', backgroundColor: '#003399' }} align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredSorties
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((sortie) => (
+                  <TableRow key={sortie.id}>
+                    <TableCell align="center">{new Date(sortie.date).toLocaleDateString()}</TableCell>
+                    <TableCell align="center">{sortie.motif}</TableCell>
+                    <TableCell align="center">{sortie.montant} Ar</TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        sx={{ color: 'orange' }}
+                        onClick={() => {
+                          setSelectedSortie(sortie);
+                          setOpenEditDialog(true);
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          setSelectedSortie(sortie);
+                          setOpenDeleteDialog(true);
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <TablePagination
+          component="div"
+          count={filteredSorties.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Ligne par page"
+        />
+
+        {/* Snackbar pour les notifications */}
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={6000}
+          onClose={() => setOpenSnackbar(false)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert onClose={() => setOpenSnackbar(false)} severity={snackbarSeverity} sx={{ width: '100%' }} variant="filled">
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
+
+        {/* Dialog de confirmation pour suppression */}
+        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+          <DialogTitle>
+          <WarningAmberIcon sx={{ color: 'red', marginRight: 2 }} />
+          Confirmer la suppression</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Êtes-vous sûr de vouloir supprimer cette sortie ?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDeleteDialog(false)}  variant='contained' color='primary'>
+              Annuler
+            </Button>
+            <Button onClick={handleDelete}variant='contained' color="error">
+              Supprimer
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog de modification */}
+        <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
+          <DialogTitle>Modifier la Sortie</DialogTitle>
+          <DialogContent>
+            <TextField
+              label="Motif"
+              variant="outlined"
+              fullWidth
+              value={selectedSortie?.motif || ""}
+              onChange={(e) =>
+                setSelectedSortie({ ...selectedSortie, motif: e.target.value })
+              }
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Montant"
+              variant="outlined"
+              fullWidth
+              type="number"
+              value={selectedSortie?.montant || ""}
+              onChange={(e) =>
+                setSelectedSortie({
+                  ...selectedSortie,
+                  montant: parseFloat(e.target.value),
+                })
+              }
+              sx={{ mb: 2 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenEditDialog(false)} variant='contained' color='error'>
+              Annuler
+            </Button>
+            <Button onClick={handleEdit} variant='contained' color='primary'>
+              Enregistrer
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
+    </ThemeProvider>
   );
 };
 

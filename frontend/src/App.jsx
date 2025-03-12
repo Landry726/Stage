@@ -23,6 +23,7 @@ import Sortie from './components/pages/caisse/sortie/sortie';
 import Entree from './components/pages/caisse/entree/entree';
 import Caisse from './components/pages/caisse/caisse';
 import DetailPaiement from './components/pages/cotisatons/detailPaiement';
+import SansCotisation from './components/pages/cotisatons/membreSanscotisation';
 
 const App = () => {
 
@@ -47,6 +48,7 @@ const App = () => {
         <Route path='/Entree' element = {<Layout><Entree/></Layout>}></Route>
         <Route path='/Caisse' element = {<Layout><Caisse/></Layout>}></Route>
         <Route path='/DetailPaiement/:id' element={<Layout><DetailPaiement /></Layout>} />
+        <Route path='/MembreSansCotisation' element={<Layout><SansCotisation/></Layout>} />
 
         {/* Ajoutez d'autres routes ici */}
       </Routes>

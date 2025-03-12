@@ -15,6 +15,7 @@ import {
   Snackbar,
   Alert,
   AlertTitle,
+ 
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import axios from 'axios';
@@ -27,12 +28,12 @@ const CaisseList = () => {
   // States for Snackbar
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success' or 'error'
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); 
 
   useEffect(() => {
-    // Récupérer les données depuis le backend
+
     axios
-      .get('http://localhost:3000/api/caisse') // Assurez-vous que ce lien correspond à votre API
+      .get('http://localhost:3000/api/caisse') 
       .then((response) => {
         setCaisses(response.data);
         setLoading(false);
@@ -47,10 +48,10 @@ const CaisseList = () => {
     try {
       const response = await axios.get(
         'http://localhost:3000/api/rapport',
-        { responseType: 'blob' } // Permet de récupérer un fichier binaire
+        { responseType: 'blob' } 
       );
 
-      // Créer un lien pour télécharger le fichier
+     
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -104,7 +105,15 @@ const CaisseList = () => {
         boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
         overflowY: 'auto'
       }}>
-      {/* Snackbar pour les alertes */}
+      <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 'bold',
+            color: '#003399', 
+            margin: '20px 0',
+        }}>
+          Caisse Social
+        </Typography>     
       <Snackbar
         open={openSnackbar}
         autoHideDuration={6000} // Fermer après 6 secondes

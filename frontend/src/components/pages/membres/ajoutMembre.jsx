@@ -47,7 +47,7 @@ const AjoutMembre = () => {
 
     const handleAddMember = async () => {
         if (!validateForm()) return;
-
+    
         try {
             const response = await fetch('http://localhost:3000/api/membres', {
                 method: 'POST',
@@ -56,19 +56,22 @@ const AjoutMembre = () => {
                 },
                 body: JSON.stringify(newMember),
             });
-
+    
+            // Vérifier si la réponse est OK
             if (!response.ok) {
-                throw new Error('Erreur lors de l\'ajout du membre');
+                const errorData = await response.json();
+                // Si le serveur renvoie une erreur liée à un membre existant (par exemple, email déjà pris)
+                throw new Error(errorData.error || 'Erreur lors de l\'ajout du membre');
             }
-
+    
             setSnackbarMessage('Membre ajouté avec succès.');
             setSnackbarSeverity('success');
             setSnackbarOpen(true);
-
+    
             // Réinitialiser le formulaire
             setNewMember({ nom: '', poste: '', email: '' });
             setErrors({ nom: '', poste: '', email: '' });
-
+    
             // Rediriger vers la liste des membres après un ajout réussi
             setTimeout(() => {
                 navigate('/membres');
@@ -79,6 +82,7 @@ const AjoutMembre = () => {
             setSnackbarOpen(true);
         }
     };
+    
 
     const handleCancel = () => {
         navigate('/membres');

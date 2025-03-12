@@ -104,3 +104,106 @@ exports.getTotalSortie = async (req, res) => {
     res.status(500).json({ error: "Erreur lors du calcul de la somme des sorties" });
   }
 };
+
+// Mettre à jour une sortie
+exports.updateSortie = async (req, res) => {
+  try {
+    const { id } = req.params; // Récupérer l'ID de la sortie à partir des paramètres de l'URL
+    const { caisseId, montant, motif, date } = req.body;
+
+    // Vérification des entrées
+    if (!caisseId || isNaN(parseInt(caisseId))) {
+      return res.status(400).json({ error: "ID de la caisse invalide" });
+    }
+    if (!montant || isNaN(parseFloat(montant))) {
+      return res.status(400).json({ error: "Montant invalide" });
+    }
+
+    // Vérifier si la caisse existe et récupérer son solde actuel
+    const caisse = await prisma.caisseSociale.findUnique({
+      where: { id: parseInt(caisseId) },
+      select: { soldeActuel: true },
+    });
+    if (!caisse) {
+      return res.status(404).json({ error: "Caisse non trouvée" });
+    }
+
+    // Vérifier si la sortie existe
+    const sortie = await prisma.soldeSortie.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!sortie) {
+      return res.status(404).json({ error: "Sortie non trouvée" });
+    }
+
+    // Calculer le nouveau solde de la caisse après modification
+    const nouvelleSortie = await prisma.soldeSortie.update({
+      where: { id: parseInt(id) },
+      data: {
+        caisseId: parseInt(caisseId),
+        montant: parseFloat(montant),
+        motif,
+        date: new Date(date),
+      },
+    });
+
+    // Mettre à jour le solde de la caisse après modification
+    const updatedCaisse = await prisma.caisseSociale.update({
+      where: { id: parseInt(caisseId) },
+      data: {
+        soldeActuel: caisse.soldeActuel - sortie.montant + parseFloat(montant),
+      },
+    });
+
+    res.status(200).json({
+      message: "Sortie mise à jour avec succès",
+      nouvelleSortie,
+      soldeActuel: updatedCaisse.soldeActuel,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur lors de la mise à jour de la sortie" });
+  }
+};
+
+// Supprimer une sortie
+exports.deleteSortie = async (req, res) => {
+  try {
+    const { id } = req.params; // Récupérer l'ID de la sortie à supprimer
+
+    // Vérifier si la sortie existe
+    const sortie = await prisma.soldeSortie.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!sortie) {
+      return res.status(404).json({ error: "Sortie non trouvée" });
+    }
+
+    // Récupérer les informations de la caisse associée à la sortie
+    const caisse = await prisma.caisseSociale.findUnique({
+      where: { id: sortie.caisseId },
+      select: { soldeActuel: true },
+    });
+
+    // Supprimer la sortie
+    await prisma.soldeSortie.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // Mettre à jour le solde de la caisse après la suppression de la sortie
+    const updatedCaisse = await prisma.caisseSociale.update({
+      where: { id: sortie.caisseId },
+      data: {
+        soldeActuel: caisse.soldeActuel + sortie.montant,
+      },
+    });
+
+    res.status(200).json({
+      message: "Sortie supprimée avec succès",
+      soldeActuel: updatedCaisse.soldeActuel,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur lors de la suppression de la sortie" });
+  }
+};

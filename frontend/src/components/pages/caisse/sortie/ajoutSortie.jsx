@@ -5,10 +5,13 @@ import {
   MenuItem,
   Box,
   Typography,
+  Snackbar,
+  Alert,
+  IconButton,
 } from "@mui/material";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { ArrowBack } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 const AddSortie = () => {
   const [formData, setFormData] = useState({
@@ -17,17 +20,22 @@ const AddSortie = () => {
     motif: "",
     caisseId: "",
   });
-
+  const navigate = useNavigate();
   const [caisses, setCaisses] = useState([]);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success", // success, error, warning, info
+  });
 
   // Charger les caisses disponibles depuis le backend
   useEffect(() => {
     const fetchCaisses = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/caisse"); // URL de l'API
+        const response = await axios.get("http://localhost:3000/api/caisse");
         setCaisses(response.data);
       } catch (error) {
-        toast.error("Erreur lors du chargement des caisses");
+        handleSnackbar("Erreur lors du chargement des caisses", "error");
         console.error(error);
       }
     };
@@ -41,15 +49,28 @@ const AddSortie = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  // Gestion de l'ouverture du Snackbar
+  const handleSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  // Gestion de la fermeture du Snackbar
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   // Gestion de la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.date || !formData.montant || !formData.motif || !formData.caisseId) {
+      handleSnackbar("Tous les champs sont requis", "warning");
+      return;
+    }
+
     try {
-      const response = await axios.post("http://localhost:3000/api/sortie", formData); // URL de l'API
-      toast.success("Sortie ajoutée avec succès !");
-      
-      console.log("Réponse du serveur :", response.data);
+      const response = await axios.post("http://localhost:3000/api/sortie", formData);
+      handleSnackbar("Sortie ajoutée avec succès !", "success");
 
       // Réinitialisation du formulaire après ajout
       setFormData({
@@ -57,25 +78,34 @@ const AddSortie = () => {
         montant: "",
         motif: "",
         caisseId: "",
-        
       });
+
+      console.log("Réponse du serveur :", response.data);
+      setTimeout(() => {
+        navigate('/Sortie');
+    }, 2000);
     } catch (error) {
       console.error("Erreur lors de l'ajout de la sortie :", error);
-      toast.error("Erreur lors de l'ajout de la sortie",error);
+      handleSnackbar("Erreur lors de l'ajout de la sortie", "error");
     }
   };
-
+  const handleCancel = () => {
+    navigate('/Sortie');
+};
   return (
     <Box
-      sx={{
-        maxWidth: 500,
-        margin: "auto",
-        mt: 4,
-        padding: 3,
-        boxShadow: 3,
-        borderRadius: 2,
-      }}
+    sx={{
+      maxWidth: 800,
+      margin: '30px',
+      padding: 5,
+      boxShadow: 5,
+      borderRadius: 2,
+      bgcolor: 'background.paper',
+  }}
     >
+      <IconButton onClick={handleCancel} sx={{ mr: 1, color: 'primary.main' }}>
+                        <ArrowBack />
+      </IconButton>
       <Typography variant="h5" gutterBottom>
         Ajouter une Sortie
       </Typography>
@@ -128,7 +158,7 @@ const AddSortie = () => {
           {caisses.length > 0 ? (
             caisses.map((caisse) => (
               <MenuItem key={caisse.id} value={caisse.id}>
-               {caisse.nom || `Caisse ${caisse.id}`}
+                {caisse.nom || `Caisse ${caisse.id}`}
               </MenuItem>
             ))
           ) : (
@@ -148,8 +178,22 @@ const AddSortie = () => {
         </Button>
       </form>
 
-      {/* Container pour les notifications */}
-      <ToastContainer />
+      {/* Snackbar pour les notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

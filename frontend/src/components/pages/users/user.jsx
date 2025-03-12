@@ -20,10 +20,16 @@ import {
   DialogTitle,
   Snackbar,
   Alert,
+  createTheme
+
 } from '@mui/material';
+import { frFR } from "@mui/material/locale";
+import { ThemeProvider } from "@mui/material/styles";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { Grid } from '@chakra-ui/react';
 
 const SimpleTable = () => {
   const [data, setData] = useState([]);
@@ -131,15 +137,36 @@ const SimpleTable = () => {
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
-
+  const theme1 = createTheme(
+    {
+      palette: {
+        primary: {
+          main: "#003399",
+        },
+      },
+    },
+    frFR // Localisation en français
+  );
   return (
-    <Paper elevation={3}sx={{
-      padding: "10px",
+    <ThemeProvider theme={theme1}>
+    <Paper 
+    elevation={3}sx={{
+      padding: 1,
       marginLeft:  '-220px',
       maxHeight: '100vh',
       boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
       overflowY: 'auto'
     }}>
+      <Typography
+                variant="h5"
+                sx={{
+                    fontWeight: 'bold',
+                    color: '#003399', 
+                    margin: '5px 0',
+                }}
+                >
+                Utilisateur
+                </Typography>
       <TableContainer component={Paper} >
         <Table>
           <TableHead sx={{ backgroundColor: '#003399' }}>
@@ -154,7 +181,10 @@ const SimpleTable = () => {
           <TableBody>
             {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
               <TableRow key={row.id}>
-                <TableCell>{row.username}</TableCell>
+                <TableCell>
+                {/* <AccountCircleIcon fontSize="large" sx={{ color: '#003399', Top: 2  , marginRight : 1}} /> */}
+                {row.username}
+                </TableCell>
                 <TableCell>{row.email}</TableCell>
                 <TableCell align="center">
                   <IconButton onClick={() => handleEdit(row.id)} sx={{ color: 'orange' }}>
@@ -176,6 +206,7 @@ const SimpleTable = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage = "Ligne par page "
         />
       </TableContainer>
 
@@ -250,7 +281,8 @@ const SimpleTable = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Paper>
+    </Paper> 
+    </ThemeProvider>
   );
 };
 

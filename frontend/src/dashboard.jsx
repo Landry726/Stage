@@ -17,6 +17,7 @@ import {
   Group as GroupIcon 
 } from '@mui/icons-material';
 import axios from 'axios';
+
 import { 
   AreaChart, 
   Area, 
@@ -29,65 +30,84 @@ import {
   Bar,
   ResponsiveContainer 
 } from 'recharts';
-
-const DashboardCard = ({ icon, title, value, color, loading = false }) => {
+import CountUp from 'react-countup'; 
+const formatValue = (value) => {
+  return `${new Intl.NumberFormat('fr-FR').format(value)} Ar`;
+};
+const DashboardCard = ({ icon, title, value, color, loading = false, isAmount = true }) => {
   const theme = useTheme();
+  const formattedValue = isAmount
+    ? `${new Intl.NumberFormat('fr-FR').format(value)} Ar`
+    : value; // Pas de formatage pour les nombres non monétaires
 
-  return (
-    <Paper
-      elevation={3}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: theme.spacing(2),
-        borderRadius: theme.spacing(2),
-        background: `linear-gradient(145deg, ${color}CC, ${color}DD)`,
-        color: theme.palette.common.white,
-        transition: 'transform 0.3s ease',
-        '&:hover': {
-          transform: 'scale(1.03)',
-          boxShadow: theme.shadows[6]
-        }
-      }}
-    >
-      <Box
+    return (
+      <Paper
+        elevation={4}
         sx={{
-          marginRight: theme.spacing(2),
-          backgroundColor: 'rgba(255,255,255,0.2)',
-          padding: theme.spacing(1.5),
-          borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          padding: theme.spacing(2),
+          borderRadius: theme.spacing(2),
+          background: `linear-gradient(145deg, ${color}CC, ${color}DD)`,
+          color: theme.palette.common.white,
+          transition: 'transform 0.3s ease',
+          '&:hover': {
+            transform: 'scale(1.03)',
+            boxShadow: theme.shadows[6],
+          },
         }}
       >
-        {loading ? <CircularProgress size={24} color="inherit" /> : icon}
-      </Box>
-      <Box>
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            opacity: 0.7, 
-            marginBottom: theme.spacing(0.5),
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
+        <Box
+          sx={{
+            marginRight: theme.spacing(2),
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            padding: theme.spacing(1.5),
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {title}
-        </Typography>
-        <Typography 
-          variant="h5" 
-          sx={{ 
-            fontWeight: 600, 
-            color: theme.palette.common.white 
-          }}
-        >
-          {loading ? '...' : value}
-        </Typography>
-      </Box>
-    </Paper>
-  );
-};
+          {loading ? <CircularProgress size={24} color="inherit" /> : icon}
+        </Box>
+        <Box>
+          <Typography
+            variant="body2"
+            sx={{
+              opacity: 0.7,
+              marginBottom: theme.spacing(0.5),
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            {title}
+          </Typography>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 600,
+              color: theme.palette.common.white,
+            }}
+          >
+            {loading ? (
+              '...'
+            ) : (
+              <CountUp
+                start={0}
+                end={parseFloat(value)} // Conversion en nombre si nécessaire
+                duration={1.5}
+                separator=" "
+                decimals={isAmount ? 0 : 0} 
+                suffix={isAmount ? ' Ar' : ''} 
+                key={value} 
+              />
+            )}
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  };
+
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -174,7 +194,7 @@ const Dashboard = () => {
           <DashboardCard
             icon={<AccountBalanceIcon />}
             title="Total Caisse"
-            value={`${totalCaisses} Ar`}
+            value={`${totalCaisses}`+'Ar'}
             color="#1976d2"
             loading={loading}
           />
@@ -183,7 +203,7 @@ const Dashboard = () => {
           <DashboardCard
             icon={<TrendingUpIcon />}
             title="Revenus"
-            value={`${totalEntrees} Ar`}
+            value={`${totalEntrees} `}
             color="#4caf50"
             loading={loading}
           />
@@ -192,7 +212,7 @@ const Dashboard = () => {
           <DashboardCard
             icon={<TrendingDownIcon />}
             title="Depense"
-            value={`${totalSorties} Ar`}
+            value={`${totalSorties}`}
             color="#f44336"
             loading={loading}
           />
@@ -204,161 +224,176 @@ const Dashboard = () => {
             value={totalMembres}
             color="#ff9800"
             loading={loading}
+            isAmount={false}
           />
         </Grid>
       </Grid>
 
       <Grid container spacing={4}>
-        {/* Graphique 1 : Statistique des Entrées et Sorties */}
-        <Grid item xs={12} md={8}>
-          <Paper
-            elevation={4}
-            sx={{
-              borderRadius: theme.spacing(2),
-              overflow: 'hidden',
-              backgroundColor: theme.palette.background.paper,
-            }}
-          >
-            <CardContent>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{
-                  fontWeight: 600,
-                  color: theme.palette.text.primary,
-                  marginBottom: theme.spacing(3),
-                }}
-              >
-                Statistique des Entrées et Sorties par Mois
-              </Typography>
-              {loading ? (
-                <Skeleton
-                  variant="rectangular"
-                  height={300}
-                  sx={{ borderRadius: theme.spacing(1) }}
-                />
-              ) : (
-                <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart
-                    data={chartData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={theme.palette.divider}
-                      strokeOpacity={0.5}
-                    />
-                    <XAxis
-                      dataKey="mois"
-                      tick={{
-                        fontSize: 12,
-                        fill: theme.palette.text.secondary,
-                      }}
-                    />
-                    <YAxis
-                      tick={{
-                        fontSize: 12,
-                        fill: theme.palette.text.secondary,
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        fontSize: 12,
-                        borderRadius: theme.spacing(1),
-                        backgroundColor: theme.palette.background.paper,
-                      }}
-                    />
-                    <Legend verticalAlign="top" height={36} iconType="circle" />
-                    <Area
-                      type="monotone"
-                      dataKey="entrees"
-                      stroke="#4caf50"
-                      fillOpacity={0.5}
-                      fill="#4caf50"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="sorties"
-                      stroke="#f44336"
-                      fillOpacity={0.5}
-                      fill="#f44336"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Paper>
-        </Grid>
-
-        {/* Graphique 2 : Rapport des Cotisations */}
-        <Grid item xs={12} md={8}>
-          <Paper
-            elevation={4}
-            sx={{
-              borderRadius: theme.spacing(2),
-              padding: theme.spacing(3),
-              backgroundColor: theme.palette.background.paper,
-            }}
-          >
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{
-                fontWeight: 600,
-                color: theme.palette.text.primary,
-                marginBottom: theme.spacing(3),
+  {/* Graphique 1 : Statistique des Entrées et Sorties */}
+  <Grid item xs={12} md={6}>
+    <Paper
+      elevation={4}
+      sx={{
+        borderRadius: theme.spacing(2),
+        marginRight : 15,
+        overflow: 'hidden',
+        backgroundColor: theme.palette.background.paper,
+        height: '100%', // Assure une hauteur uniforme
+      }}
+    >
+      <CardContent>
+        <Typography
+          variant="h6"
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            color: theme.palette.text.primary,
+            marginBottom: theme.spacing(3),
+          }}
+        >
+          Statistique des Entrées et Sorties par Mois
+        </Typography>
+        {loading ? (
+          <Skeleton
+            variant="rectangular"
+            height={300}
+            sx={{ borderRadius: theme.spacing(1) }}
+          />
+        ) : (
+          <ResponsiveContainer width="100%" height={350}>
+           <AreaChart
+              data={chartData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 30,
+                bottom: 5,
               }}
             >
-              Rapport des Cotisations par Mois
-            </Typography>
-            {loading ? (
-              <Skeleton
-                variant="rectangular"
-                height={300}
-                sx={{ borderRadius: theme.spacing(1) }}
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={theme.palette.divider}
+                strokeOpacity={0.5}
               />
-            ) : (
-              <ResponsiveContainer width="80%" height={350}>
-                <BarChart
-                  data={cotisationsByMonth}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={theme.palette.divider}
-                    strokeOpacity={0.5}
-                  />
-                  <XAxis
-                    dataKey="month"
-                    tick={{
-                      fontSize: 12,
-                      fill: theme.palette.text.secondary,
-                    }}
-                  />
-                  <YAxis
-                    tick={{
-                      fontSize: 12,
-                      fill: theme.palette.text.secondary,
-                    }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      fontSize: 12,
-                      borderRadius: theme.spacing(1),
-                      backgroundColor: theme.palette.background.paper,
-                    }}
-                  />
-                  <Bar dataKey="cotisations" fill={theme.palette.primary.main} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </Paper>
-        </Grid>
+              <XAxis
+                dataKey="mois"
+                tick={{
+                  fontSize: 12,
+                  fill: theme.palette.text.secondary,
+                }}
+              />
+              <YAxis
+                tick={{
+                  fontSize: 12,
+                  fill: theme.palette.text.secondary,
+                }}
+              />
+              <Tooltip
+                contentStyle={{
+                  fontSize: 12,
+                  borderRadius: theme.spacing(1),
+                  backgroundColor: theme.palette.background.paper,
+                }}
+              />
+              <Legend verticalAlign="top" height={36} iconType="circle" />
+              <Area
+                type="monotone"
+                dataKey="entrees"
+                stroke="#4caf50"
+                fillOpacity={0.5}
+                fill="#4caf50"
+                animationBegin={300} // Retard pour meilleure synchro
+                animationDuration={1500} // Augmentation de la durée
+                animationEasing="ease-out" // Douceur des animations
+              />
+              <Area
+                type="monotone"
+                dataKey="sorties"
+                stroke="#f44336"
+                fillOpacity={0.5}
+                fill="#f44336"
+                animationBegin={500} // Retard pour différencier les animations
+                animationDuration={1500}
+                animationEasing="ease-out"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Paper>
+  </Grid>
+
+  {/* Graphique 2 : Rapport des Cotisations */}
+  <Grid item xs={12} md={6}>
+    <Paper
+      elevation={4}
+      sx={{
+        borderRadius: theme.spacing(2),
+        padding: theme.spacing(3),
+        backgroundColor: theme.palette.background.paper,
+        height: '100%', // Assure une hauteur uniforme
+      }}
+    >
+      <Typography
+        variant="h6"
+        gutterBottom
+        sx={{
+          fontWeight: 600,
+          color: theme.palette.text.primary,
+          marginBottom: theme.spacing(3),
+        }}
+      >
+        Rapport des Cotisations par Mois
+      </Typography>
+      {loading ? (
+        <Skeleton
+          variant="rectangular"
+          height={300}
+          sx={{ borderRadius: theme.spacing(1) }}
+        />
+      ) : (
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart
+            data={cotisationsByMonth}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={theme.palette.divider}
+              strokeOpacity={0.5}
+            />
+            <XAxis
+              dataKey="month"
+              tick={{
+                fontSize: 12,
+                fill: theme.palette.text.secondary,
+              }}
+            />
+            <YAxis
+              tick={{
+                fontSize: 12,
+                fill: theme.palette.text.secondary,
+              }}
+            />
+            <Tooltip
+              contentStyle={{
+                fontSize: 12,
+                borderRadius: theme.spacing(1),
+                backgroundColor: theme.palette.background.paper,
+              }}
+            />
+            <Bar
+              dataKey="cotisations"
+              fill={theme.palette.primary.main}
+              animationDuration={1000} // Animation ajoutée
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </Paper>
+  </Grid>
+
       </Grid>
     </Box>
   );

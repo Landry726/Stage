@@ -20,8 +20,12 @@ import {
     Alert,
     Typography,
     Snackbar,
+    createTheme
 } from '@mui/material';
+import { frFR } from "@mui/material/locale";
+import { ThemeProvider } from "@mui/material/styles";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import {  List as ListIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import PaymentIcon from '@mui/icons-material/Payment';
 import EditIcon from '@mui/icons-material/Edit';
@@ -141,16 +145,47 @@ const CotisationTable = () => {
         const isMatchingMonth = selectedMonth ? cotisation.mois === selectedMonth || selectedMonth === 'Tous' : true; // Filtrer par mois ou "Tous"
         return isMatchingMembre && isMatchingMonth;
     });
-
+ // Création d'un thème personnalisé en français
+ const theme = createTheme(
+    {
+      palette: {
+        primary: {
+          main: "#003399",
+        },
+      },
+    },
+    frFR // Localisation en français
+  );
     return (
-        <Paper sx={{ padding: '10px', marginTop: '10px', maxHeight: '100vh', overflowY: 'auto', marginLeft: '-220px' }}>
-             
+        <ThemeProvider theme={theme}>
+        <Paper 
+        sx={{ padding: '10px',
+             marginTop: '10px',
+             maxHeight: '100vh',
+             overflowY: 'auto', 
+            marginLeft: '-220px' 
+        }}>
+              <Typography
+                variant="h5"
+                sx={{
+                    fontWeight: 'bold',
+                    color: '#003399', 
+                    margin: '20px 0',
+                }}
+                >
+                Cotisation
+                </Typography>
             <Link to="/ajoutCotisation">
-                <Button variant="contained" color="primary" sx={{ marginBottom: '16px' }} startIcon={<AddIcon />}>
+                <Button variant="contained" color="primary" sx={{ marginBottom: '20px',marginRight: 5  }} startIcon={<AddIcon />}>
                     Ajouter un Paiement
                 </Button>
             </Link>
-
+            <Link to="/MembreSansCotisation">
+            <Button variant="contained" color="primary" style={{ marginRight: 30 , marginBottom : 20 }} startIcon={<ListIcon />}>
+            Cotisation non effectuer
+            </Button>
+            </Link>
+           
             {/* Diviser la recherche en deux colonnes */}
             <Grid container spacing={2} sx={{ marginBottom: '16px' }}>
                 <Grid item xs={12} sm={6}>
@@ -229,6 +264,7 @@ const CotisationTable = () => {
                 rowsPerPage={cotisationsPerPage}
                 page={currentPage}
                 onPageChange={handleChangePage}
+                labelRowsPerPage = "Ligne par page "
               
             />
 
@@ -239,11 +275,11 @@ const CotisationTable = () => {
                 Confirmer la suppression
                 </DialogTitle>
                 <DialogContent>
-                    <Typography>Voulez-vous vraiment supprimer cette cotisation ?</Typography>
+                    <Typography>Voulez-vous vraiment supprimer cette paiement ?</Typography>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setDeleteDialogOpen(false)} variant='contained' color='primary'>Annuler</Button>
-                    <Button onClick={() => handleDelete(cotisationToEdit.id)} variant='contained' color="error">
+                    <Button onClick={() => handleDelete()} variant='contained' color="error">
                         Supprimer
                     </Button>
                 </DialogActions>
@@ -252,6 +288,7 @@ const CotisationTable = () => {
             {/* Dialog de modification */}
             <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
                 <DialogTitle>Modifier la Cotisation</DialogTitle>
+                
                 <DialogContent>
                     <TextField
                         label="Membre"
@@ -267,6 +304,7 @@ const CotisationTable = () => {
                                 {membre.nom}
                             </MenuItem>
                         ))}
+                        
                     </TextField>
                     <TextField
                         label="Montant"
@@ -320,6 +358,7 @@ const CotisationTable = () => {
         </Alert>
       </Snackbar>
         </Paper>
+        </ThemeProvider>
     );
 };
 

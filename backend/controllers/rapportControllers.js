@@ -33,60 +33,71 @@ const generateExcelReport = async (req, res) => {
     // Création du workbook Excel
     const workbook = new ExcelJS.Workbook();
 
+
     // Feuille des cotisations
-    const cotisationSheet = workbook.addWorksheet('Rapport Cotisations');
+    const cotisationSheet = workbook.addWorksheet('Cotisation');
+   
+
     cotisationSheet.columns = [
-      { header: 'Nom Membre', key: 'nomMembre', width: 30 },
-      { header: 'Mois', key: 'mois', width: 15 },
-      { header: 'Date Paiement', key: 'datePaiement', width: 15 },
-      { header: 'Montant', key: 'montant', width: 15 },
-      { header: 'Statut', key: 'statut', width: 15 },
+      { header: 'NOM MEMBRE', key: 'nomMembre', width: 30 },
+      { header: 'POSTE', key: 'poste', width: 20 },
+      { header: 'MOIS', key: 'mois', width: 15 },
+      { header: 'DATE PAIEMENT', key: 'datePaiement', width: 15 },
+      { header: 'MONTANT', key: 'montant', width: 15 },
+      { header: 'STATUT', key: 'statut', width: 15 },
     ];
+    
+    cotisationSheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
 
     let totalCotisations = 0;
+    
     cotisations.forEach((cotisation) => {
       const isPaid = Boolean(cotisation.datePaiement);
+      const montant = isPaid ? cotisation.montant + ' ' : '-';
+      const datePaiement = isPaid ? cotisation.datePaiement.toLocaleDateString('fr-FR') : 'Non payé';
+    
       const row = cotisationSheet.addRow({
         nomMembre: cotisation.membre.nom,
+        poste: cotisation.membre.poste,
         mois: cotisation.mois,
-        datePaiement: isPaid
-          ? cotisation.datePaiement.toLocaleDateString('fr-FR')
-          : 'Non payé',
-        montant: cotisation.montant + 'Ar' ,
-        statut: isPaid ? 'Payé' : 'Non payé',
+        datePaiement,
+        montant,
+        statut: cotisation.status,  // statut est une string
       });
-
+    
       totalCotisations += isPaid ? cotisation.montant : 0;
-
-      // Coloration conditionnelle pour les non-payés
-      if (!isPaid) {
+    
+      // Vérifier si le statut indique une insuffisance
+      const statutStr = (cotisation.status || '').toLowerCase().trim(); // Normalisation du statut
+      if (statutStr === 'insuffisant' || statutStr === '0' || statutStr.includes('insuff')) {
         row.eachCell((cell) => {
-          cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFF0000' }, // Rouge
-          };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
         });
       }
     });
-
-    // Ajouter un total en bas
-    cotisationSheet.addRow({}); // Ligne vide
-    cotisationSheet.addRow({
-      nomMembre: 'Total Cotisations',
-      montant: totalCotisations + 'Ar',
-    }).font = { bold: true };
+    
+    // Ligne de total
+    cotisationSheet.addRow({});
+    cotisationSheet.addRow({ nomMembre: 'Total Cotisations', montant: totalCotisations + ' Ar' })
+      .font = { bold: true };
+    
 
     // Feuille des paiements de mission
     const paiementMissionSheet = workbook.addWorksheet('Rapport Paiements Missions');
     paiementMissionSheet.columns = [
-      { header: 'Nom Membre', key: 'nomMembre', width: 30 },
-      { header: 'Mois Effectué', key: 'moisEffectue', width: 20 },
-      { header: 'Montant Mission', key: 'mission', width: 20 },
-      { header: 'Montant Payé', key: 'montantPaye', width: 20 },
-      { header: 'Reste à Payer', key: 'restePayer', width: 20 },
-      { header: 'Statut', key: 'statut', width: 15 },
+      { header: 'NOM MEMBRE', key: 'nomMembre', width: 30 },
+      { header: 'MOIS EFFECTUÉ', key: 'moisEffectue', width: 20 },
+      { header: 'MONTANT MISSION', key: 'mission', width: 20 },
+      { header: 'MONTANT PAYÉ', key: 'montantPaye', width: 20 },
+      { header: 'RESTE À PAYER', key: 'restePayer', width: 20 },
+      { header: 'STATUT', key: 'statut', width: 15 },
     ];
+
+    paiementMissionSheet.getRow(1).eachCell((cell) => {
+  cell.font = { bold: true };
+});
 
     let totalMissions = 0;
     paiementsMissions.forEach((paiement) => {
@@ -94,74 +105,72 @@ const generateExcelReport = async (req, res) => {
       const row = paiementMissionSheet.addRow({
         nomMembre: paiement.mission.membre.nom,
         moisEffectue: paiement.mission.mois,
-        mission: paiement.mission.montant,
-        montantPaye: paiement.montant + 'Ar',
+        mission: paiement.mission.montant ,
+        montantPaye: paiement.montant,
         restePayer: paiement.restePayer,
         statut: isPaid ? 'Payé' : 'Non payé',
       });
 
       totalMissions += paiement.montant;
 
-      // Coloration conditionnelle pour les non-payés
       if (!isPaid) {
         row.eachCell((cell) => {
-          cell.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFFF0000' }, // Rouge
-          };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF0000' } };
         });
       }
     });
 
-    // Ajouter un total en bas
-    paiementMissionSheet.addRow({}); // Ligne vide
+    paiementMissionSheet.addRow({});
     paiementMissionSheet.addRow({
       nomMembre: 'Total Missions',
-      montantPaye: totalMissions + 'Ar',
+      montantPaye: totalMissions + ' Ar',
     }).font = { bold: true };
 
     // Feuille pour la caisse sociale
-    const caisseSheet = workbook.addWorksheet('Rapport Caisse Sociale');
+    const caisseSheet = workbook.addWorksheet('Caisse Sociale');
     caisseSheet.columns = [
-      { header: 'Date', key: 'date', width: 15 },
-      { header: 'Type', key: 'type', width: 15 },
-      { header: 'Montant', key: 'montant', width: 15 },
-      { header: 'Motif', key: 'motif', width: 30 },
+      { header: 'DATE', key: 'date', width: 15 },
+      { header: 'MOTIF ENTREE', key: 'motif_entree', width: 30  },
+      { header: 'ENTREE', key: 'entree', width: 15 },
+      { header: 'MOTIF SORTIE', key: 'motif_sortie', width: 30 },
+      { header: 'SORTIE', key: 'sortie', width: 15 },
     ];
+    caisseSheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
 
     let totalCaisse = 0;
 
-    // Ajouter les cotisations dans la caisse sociale
     if (totalCotisations > 0) {
       caisseSheet.addRow({
-        date: new Date().toLocaleDateString('fr-FR'), // Date actuelle pour la cotisation
-        type: 'Entrée',
-        montant: totalCotisations + 'Ar',
-        motif: `Cotisation`,
+        date: new Date().toLocaleDateString('fr-FR'),
+        motif_entree: 'Cotisation',
+        entree: totalCotisations,
+        motif_sortie: '',
+        sortie: '',
       });
       totalCaisse += totalCotisations;
     }
 
-    // Ajouter les paiements de mission dans la caisse sociale
     if (totalMissions > 0) {
       caisseSheet.addRow({
-        date: new Date().toLocaleDateString('fr-FR'), // Date actuelle pour la mission
-        type: 'Entrée',
-        montant: totalMissions + 'Ar',
-        motif: `Mission`,
+        date: new Date().toLocaleDateString('fr-FR'),
+        motif_entree: 'Mission',
+        entree: totalMissions ,
+        motif_sortie: '',
+        sortie: '',
       });
       totalCaisse += totalMissions;
     }
 
-    // Ajouter les entrées et sorties de la caisse
     caisses.forEach((caisse) => {
       caisse.entrees.forEach((entree) => {
         caisseSheet.addRow({
           date: entree.date.toLocaleDateString('fr-FR'),
-          type: 'Entrée',
-          montant: entree.montant + 'Ar',
-          motif: entree.motif,
+          motif_entree: entree.motif,
+          entree: entree.montant,
+          motif_sortie: '',
+          sortie: '',
         });
         totalCaisse += entree.montant;
       });
@@ -169,22 +178,27 @@ const generateExcelReport = async (req, res) => {
       caisse.sorties.forEach((sortie) => {
         caisseSheet.addRow({
           date: sortie.date.toLocaleDateString('fr-FR'),
-          type: 'Sortie',
-          montant: sortie.montant + 'Ar',
-          motif: sortie.motif,
+          motif_entree: '',
+          entree: '',
+          motif_sortie: sortie.motif,
+          sortie: sortie.montant,
         });
         totalCaisse -= sortie.montant;
       });
     });
 
-    // Ajouter un total en bas de la feuille caisse sociale
-    caisseSheet.addRow({}); // Ligne vide
+    caisseSheet.addRow({});
     caisseSheet.addRow({
-      date: '',
-      type: 'Total Caisse Sociale',
-      montant: totalCaisse,
-      motif: '',
+      date: 'Total Caisse',
+      motif_entree: '',
+      entree: totalCaisse >= 0 ? totalCaisse + ' Ar' : '',
+      motif_sortie: '',
+      sortie: totalCaisse < 0 ? Math.abs(totalCaisse) + ' Ar' : '',
     }).font = { bold: true };
+
+    caisseSheet.eachRow((row) => {
+      row.height = 25;
+    });
 
     // Configurer la réponse HTTP pour le téléchargement
     res.setHeader(

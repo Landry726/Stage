@@ -49,62 +49,8 @@ exports.getAllEntree = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la récupération des sorties" });
   }
 };
-exports.updateEntree = async (req, res) => {
-  try {
-    const { id } = req.params;  // ID de l'entrée à modifier
-    const { motif, montant, date, caisseId } = req.body;
 
-    // Validation des champs requis
-    if (!motif || !montant || !date || !caisseId) {
-      return res.status(400).json({ error: 'Tous les champs sont requis pour la mise à jour' });
-    }
-
-    // Vérification de la validité de l'ID
-    const parsedId = parseInt(id);
-    if (isNaN(parsedId)) {
-      return res.status(400).json({ error: 'ID invalide' });
-    }
-
-    // Mise à jour de l'entrée
-    const updatedEntree = await prisma.soldeEntree.update({
-      where: {
-        id: parsedId,  // Utilisation de l'ID converti en entier
-      },
-      data: {
-        motif,
-        montant: parseFloat(montant),
-        date: new Date(date),
-        caisse: { connect: { id: parseInt(caisseId) } },
-      },
-    });
-
-    // Réponse de succès
-    res.status(200).json({ message: 'Entrée mise à jour avec succès', entree: updatedEntree });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erreur lors de la mise à jour de l'entrée" });
-  }
-};
-
-
-// Supprimer une entrée
-exports.deleteEntree = async (req, res) => {
-  try {
-    const { id } = req.params;  // ID de l'entrée à supprimer
-
-    // Suppression de l'entrée
-    const deletedEntree = await prisma.soldeEntree.delete({
-      where: { id: parseInt(id) },  // Chercher et supprimer l'entrée par son ID
-    });
-
-    // Réponse de succès
-    res.status(200).json({ message: 'Entrée supprimée avec succès', entree: deletedEntree });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erreur lors de la suppression de l'entrée" });
-  }
-};
-
+//Total de sortie 
 exports.getTotalEntree = async (req, res) => {
   try {
     // Étape 1 : Calculer la somme des montants dans la table soldeEntree
@@ -144,4 +90,104 @@ exports.getTotalEntree = async (req, res) => {
   }
 };
 
+exports.updateEntree = async (req, res) => {
+  try {
+    const { id } = req.params; // Récupérer l'ID de l'entrée à partir des paramètres de l'URL
+    const { caisseId, montant, motif, date } = req.body;
+
+    // Vérification des entrées
+    if (!caisseId || isNaN(parseInt(caisseId))) {
+      return res.status(400).json({ error: "ID de la caisse invalide" });
+    }
+    if (!montant || isNaN(parseFloat(montant))) {
+      return res.status(400).json({ error: "Montant invalide" });
+    }
+
+    // Vérifier si la caisse existe et récupérer son solde actuel
+    const caisse = await prisma.caisseSociale.findUnique({
+      where: { id: parseInt(caisseId) },
+      select: { soldeActuel: true },
+    });
+    if (!caisse) {
+      return res.status(404).json({ error: "Caisse non trouvée" });
+    }
+
+    // Vérifier si l'entrée existe
+    const entree = await prisma.soldeEntree.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!entree) {
+      return res.status(404).json({ error: "Entrée non trouvée" });
+    }
+
+    // Mettre à jour l'entrée dans la base de données
+    const nouvelleEntree = await prisma.soldeEntree.update({
+      where: { id: parseInt(id) },
+      data: {
+        caisseId: parseInt(caisseId),
+        montant: parseFloat(montant),
+        motif,
+        date: new Date(date),
+      },
+    });
+
+    // Mettre à jour le solde de la caisse après modification
+    const updatedCaisse = await prisma.caisseSociale.update({
+      where: { id: parseInt(caisseId) },
+      data: {
+        soldeActuel: caisse.soldeActuel - entree.montant + parseFloat(montant),
+      },
+    });
+
+    res.status(200).json({
+      message: "Entrée mise à jour avec succès",
+      nouvelleEntree,
+      soldeActuel: updatedCaisse.soldeActuel,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur lors de la mise à jour de l'entrée" });
+  }
+};
+
+exports.deleteEntree = async (req, res) => {
+  try {
+    const { id } = req.params; // Récupérer l'ID de l'entrée à supprimer
+
+    // Vérifier si l'entrée existe
+    const entree = await prisma.soldeEntree.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!entree) {
+      return res.status(404).json({ error: "Entrée non trouvée" });
+    }
+
+    // Récupérer les informations de la caisse associée à l'entrée
+    const caisse = await prisma.caisseSociale.findUnique({
+      where: { id: entree.caisseId },
+      select: { soldeActuel: true },
+    });
+
+    // Supprimer l'entrée
+    await prisma.soldeEntree.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // Mettre à jour le solde de la caisse après la suppression de l'entrée
+    const updatedCaisse = await prisma.caisseSociale.update({
+      where: { id: entree.caisseId },
+      data: {
+        soldeActuel: caisse.soldeActuel - entree.montant,
+      },
+    });
+
+    res.status(200).json({
+      message: "Entrée supprimée avec succès",
+      soldeActuel: updatedCaisse.soldeActuel,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur lors de la suppression de l'entrée" });
+  }
+};
 

@@ -4,9 +4,7 @@ import {
   TextField,
   Button,
   MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
+  Autocomplete,
   Box,
   IconButton,
   Typography,
@@ -121,45 +119,35 @@ function PaymentForm() {
           <ArrowBack />
         </IconButton>
         <Typography variant="h5" component="h1">
-          Enregistrer un Paiement
+          Faire un Paiement
         </Typography>
       </Box>
       <form onSubmit={handleSubmit}>
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="membre-label">Membre</InputLabel>
-          <Select
-            labelId="membre-label"
-            value={membreId}
-            onChange={(e) => setMembreId(e.target.value)}
-            label="Membre"
-            required
-          >
-            <MenuItem value="">Sélectionnez un membre</MenuItem>
-            {membres.map((membre) => (
-              <MenuItem key={membre.id} value={membre.id}>
-                {membre.nom}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* Membre avec Autocomplete */}
+        <Autocomplete
+          options={membres}
+          getOptionLabel={(option) => option.nom || ''}
+          renderInput={(params) => <TextField {...params} label="Membre" required />}
+          onChange={(event, newValue) => setMembreId(newValue ? newValue.id : '')}
+          sx={{ mb: 3 }}
+        />
 
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="mission-label">Mission</InputLabel>
-          <Select
-            labelId="mission-label"
-            value={missionId}
-            onChange={(e) => setMissionId(e.target.value)}
-            label="Mission"
-            required
-          >
-            <MenuItem value="">Sélectionnez une mission</MenuItem>
-            {filteredMissions.map((mission) => (
-              <MenuItem key={mission.id} value={mission.id}>
-                {mission.mois}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <TextField
+          fullWidth
+          label="Mission"
+          select
+          value={missionId}
+          onChange={(e) => setMissionId(e.target.value)}
+          required
+          sx={{ mb: 3 }}
+        >
+          <MenuItem value="">Sélectionnez une mission</MenuItem>
+          {filteredMissions.map((mission) => (
+            <MenuItem key={mission.id} value={mission.id}>
+              {mission.mois}
+            </MenuItem>
+          ))}
+        </TextField>
 
         <TextField
           fullWidth
@@ -200,7 +188,7 @@ function PaymentForm() {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }} variant='filled'>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }} variant="filled">
           {snackbar.message}
         </Alert>
       </Snackbar>

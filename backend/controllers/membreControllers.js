@@ -31,16 +31,32 @@ exports.getMembreById = async (req, res) => {
 
 // CREATE membre
 exports.createMembre = async (req, res) => {
-  const { nom, email , poste } = req.body;
+  const { nom, email, poste } = req.body;
   try {
-    const newMembre = await prisma.membre.create({
-      data: { nom, email , poste },
+    // Vérification si un membre avec le même email existe déjà
+    const existingMembre = await prisma.membre.findUnique({
+      where: {
+        email: email, // Vérifie l'existence par email
+      },
     });
-    res.json(newMembre);
+
+    if (existingMembre) {
+      // Si un membre avec le même email est trouvé, renvoyer un message d'erreur
+      return res.status(400).json({ error: 'Ce membre existe déjà avec cet email.' });
+    }
+
+    // Si aucun membre n'existe avec cet email, créer un nouveau membre
+    const newMembre = await prisma.membre.create({
+      data: { nom, email, poste },
+    });
+
+    res.status(201).json(newMembre);
   } catch (error) {
-    res.status(500).json({ error: 'Error creating membre' });
+    console.error('Erreur lors de la création du membre:', error);
+    res.status(500).json({ error: 'Erreur lors de la création du membre.' });
   }
 };
+
 
 // UPDATE membre
 exports.updateMembre = async (req, res) => {
